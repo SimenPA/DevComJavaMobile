@@ -3,16 +3,11 @@ package com.example.devcomjavamobile.network;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.net.VpnService;
-import android.os.Build;
 import android.os.ParcelFileDescriptor;
-import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
-import com.example.devcomjavamobile.R;
-
 import java.io.IOException;
-import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class DevComService extends VpnService {
@@ -55,12 +50,12 @@ public class DevComService extends VpnService {
 
     // Equivalent to connect()
     private void tunnel() {
-        startTunnel(new DevComTunnel(this));
+        startTunnel(new TunnelService(this));
     }
 
 
     // Equivalent to startConnection()
-    private void startTunnel(final DevComTunnel tunnel) {
+    private void startTunnel(final TunnelService tunnel) {
         final Thread thread =  new Thread(tunnel, "DevComTunnelThread");
         setTunnelThread(thread);
         tunnel.setmConfigureIntent(mConfigureIntent);
