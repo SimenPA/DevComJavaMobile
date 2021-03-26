@@ -1,3 +1,14 @@
+/* Based on HttpToolkit android open source code
+* This class is based on the Kotlin code found on this GitHub page:
+* https://github.com/httptoolkit/httptoolkit-android/blob/master/app/src/main/java/tech/httptoolkit/android/ProxyVpnRunnable.kt
+* HttpToolkit is an open-source tool operated by Timothy Perry
+* https://httptoolkit.tech/terms-of-service/
+*
+* Initial porting by Simen Persch Andersen started 24.03.2021
+* TODO: Find out about licensing and include this here
+ */
+
+
 package com.example.devcomjavamobile.network;
 
 import android.os.ParcelFileDescriptor;
@@ -78,6 +89,8 @@ public class TunnelRunnable  implements Runnable {
                         String errorMessage = (e.getMessage() != null) ? e.getMessage() : e.toString();
                         Log.e(TAG, errorMessage);
 
+                        /*
+                        // Port this stuff later
                         boolean isIgnorable =
                                 ((e is ConnectException && errorMessage.equals("Permission denied")) ||
                         (e is ConnectException && errorMessage.equals("Network is unreachable")) ||
@@ -86,29 +99,35 @@ public class TunnelRunnable  implements Runnable {
                         if (!isIgnorable) {
                             // Sentry.capture(e);
                         }
+                        */
                     }
 
                     packet.clear();
                 } else {
                     Thread.sleep(10);
                 }
-            } catch (e catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOExction e) {
-                e.printStacepkTrace();
             } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }: InterruptedException) {
-                Log.i(TAG, "Sleep interrupted: " + e.message)
-            } catch (e:InterruptedIOException) {
-                Log.i(TAG, "Read interrupted: " + e.message)
+                Log.i(TAG, "Sleep interrupted: " + e.getMessage())
+            } catch(InterruptedIOException e) {
+                Log.i(TAG, "Read interrupted: " + e.getMessage())
             }
         }
 
-        Log.i(TAG, "Tunnel thread shutting down")
+        Log.i(TAG, "Tunnel thread shutting down");
 
+    }
+
+    void stop() {
+        if(running) {
+            running = false;
+            // nioService.shutdown();
+            // dataServiceThread.interrupt();
+
+            // tunnelPacketWriter.shutdown();
+            // tunnelPakcetWriterThread.interrupt();
+        } else {
+            Log.w(TAG, "Tunnel runnable stopped, but it's not running");
+        }
     }
 
 }
