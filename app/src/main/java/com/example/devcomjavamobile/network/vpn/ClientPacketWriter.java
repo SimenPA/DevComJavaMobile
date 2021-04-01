@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package tech.httptoolkit.android.vpn;
+package com.example.devcomjavamobile.network.vpn;
 
 import android.util.Log;
+
+import com.example.devcomjavamobile.network.TunnelRunnable;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -29,7 +31,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import tech.httptoolkit.android.TagKt;
 
 /**
  * write packet data back to VPN client stream. This class is thread safe.
@@ -43,7 +44,7 @@ import tech.httptoolkit.android.TagKt;
 
 public class ClientPacketWriter implements Runnable {
 
-    private final String TAG = TagKt.getTAG(this);
+    private final String TAG = ClientPacketWriter.class.getSimpleName();
 
     private final FileOutputStream clientWriter;
 

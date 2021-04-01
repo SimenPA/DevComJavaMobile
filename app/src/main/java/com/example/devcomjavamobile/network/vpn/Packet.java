@@ -18,10 +18,10 @@ package tech.httptoolkit.android.vpn;
 
 import androidx.annotation.NonNull;
 
-import tech.httptoolkit.android.vpn.transport.ip.IPv4Header;
-import tech.httptoolkit.android.vpn.transport.ITransportHeader;
-import tech.httptoolkit.android.vpn.transport.tcp.TCPHeader;
-import tech.httptoolkit.android.vpn.transport.udp.UDPHeader;
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
+import com.example.devcomjavamobile.network.vpn.transport.ITransportHeader;
+import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPHeader;
+import com.example.devcomjavamobile.network.vpn.transport.udp.UDPHeader;
 
 /**
  * Data structure that encapsulate both IPv4Header and TCPHeader

@@ -12,25 +12,30 @@ package com.example.devcomjavamobile.network;
 
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import com.example.devcomjavamobile.R;
+import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
+import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 
-public class TunnelService extends VpnService {
+public class TunnelService extends VpnService implements IProtectSocket {
 
     private final int MAX_PACKET_LEN = 1500;
 
     private static final String TAG = TunnelService.class.getSimpleName();
 
-    public static final String START_TUNNEL = "com.example.javavpntest.START_TUNNEL";
-    public static final String STOP_TUNNEL = "com.example.javavpntest.STOP_TUNNEL";
+    public static final String START_TUNNEL = "com.example.devcomjavamobile.START_TUNNEL";
+    public static final String STOP_TUNNEL = "com.example.devcomjavamobile.STOP_TUNNEL";
 
     private ParcelFileDescriptor tunnelInterface;
     private TunnelRunnable tunnelRunnable;
@@ -65,10 +70,10 @@ public class TunnelService extends VpnService {
 
         if(Objects.equals(intent.getAction(), START_TUNNEL))
         {
-            boolean vpnStarted = false;
-            if(isActive()) vpnStarted = restartVpn(); else  vpnStarted = startTunnel();
+            boolean tunnelStarted = false;
+            if(isActive()) tunnelStarted = restartTunnel(); else  tunnelStarted = startTunnel();
 
-            if(vpnStarted) return Service.START_REDELIVER_INTENT;
+            if(tunnelStarted) return Service.START_REDELIVER_INTENT;
 
         } else if(Objects.equals(intent.getAction(), STOP_TUNNEL)) stopTunnel();
 
@@ -84,12 +89,12 @@ public class TunnelService extends VpnService {
 
     private Boolean startTunnel() {
 
-        String[] packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
-        String[] allPackageNames = packages.map { pkg -> pkg.packageName }
-
-
         /*
-        // Coding this later.
+
+        // Coding this later if need be
+        List<ApplicationInfo> packages = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
+        Stream<Object> allPackageNames = packages.stream().map(pkg -> pkg.packageName);
+
         // Basically checks whether it's running on the Android emulator called Genymotion
         // Apparently, the whole device crashes when intercepting the whole system using
         // genymotion, so each app needs to be explicitly allowed.
@@ -117,39 +122,19 @@ public class TunnelService extends VpnService {
 
         // BroadcastManager.sendBroadcast(blah blah blah)
 
-        // SocketProtector.getInstance(),setProtector(this);
+        SocketProtector.getInstance().setProtector(this);
 
-        tunnelRunnable = new TunnelRunnable (tunnelInterface);
+        try {
+            TunnelRunnable tunnelRunnable = new TunnelRunnable(tunnelInterface);
+        } catch(IOException e) {
+            Log.w("IOException", e);
+        }
 
         new Thread(tunnelRunnable, "Tunnel thread").start();
 
         return true;
     }
 
-
-
-    private ParcelFileDescriptor configure() throws IllegalArgumentException {
-        VpnService.Builder builder = mService.new Builder();
-
-        //IPv6 address to give the TUN interface
-        // Prefix: fe80, Dev community: dmms/'646d:6d73:0000', fingerprint 'c775:f615:9c29:fe06' from public key in res/keys/
-        // Link-local
-        builder.addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64);
-        // Add route 0.0.0.0 to accept all traffic
-        builder.addRoute("0.0.0.0", 0);
-        //
-        builder.setBlocking(true);
-        final ParcelFileDescriptor tunInterface = builder.establish();
-        if(tunInterface == null) {
-            Log.d(TAG, "TUN File Descriptor was NOT established");
-        } else  {
-            Log.d(TAG, "TUN File Descriptor was established");
-        }
-        if (mOnEstablishListener != null) {
-            mOnEstablishListener.onEstablish(tunInterface);
-        }
-        return tunInterface;
-    }
 
     private boolean restartTunnel() {
         Log.i(TAG, "Tunnel stopping for a restart...");
@@ -176,7 +161,7 @@ public class TunnelService extends VpnService {
         return startTunnel();
     }
 
-    public void stopTunnel() {
+    private void stopTunnel() {
         Log.i(TAG, "Tunnel stopping...");
         if(tunnelRunnable != null) {
             tunnelRunnable.stop();

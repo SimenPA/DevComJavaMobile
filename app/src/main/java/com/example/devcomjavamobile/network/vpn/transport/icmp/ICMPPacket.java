@@ -1,6 +1,6 @@
-package tech.httptoolkit.android.vpn.transport.icmp;
+package com.example.devcomjavamobile.network.vpn.transport.icmp;
 
-import tech.httptoolkit.android.vpn.transport.PacketHeaderException;
+import com.example.devcomjavamobile.network.vpn.transport.PacketHeaderException;
 
 /*
 * Copied by Simen Persch Andersen on 26.03.2021 from

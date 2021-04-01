@@ -14,7 +14,11 @@ package com.example.devcomjavamobile.network;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
-import java.io.File;
+import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
+import com.example.devcomjavamobile.network.vpn.SessionHandler;
+import com.example.devcomjavamobile.network.vpn.SessionManager;
+import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
+
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -22,8 +26,9 @@ import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-public class TunnelRunnable  implements Runnable {
+public class TunnelRunnable implements Runnable {
 
+    // Set on our Tunnel as the MTU, which should guarantee all packets fit this
     private final int MAX_PACKET_LEN = 1500;
 
     private boolean running = false;
@@ -33,64 +38,68 @@ public class TunnelRunnable  implements Runnable {
     // Packets from device apps downstream, heading upstream via this Tunnel
     private FileInputStream tunnelReadStream;
 
-    private ParcelFileDescriptor tunnelInterface;
+    // Packets from upstream servers, received by this VPN
     private FileOutputStream tunnelWriteStream;
 
-    public TunnelRunnable(ParcelFileDescriptor tunnelInterface) {
-        this.tunnelInterface =  tunnelInterface;
+    private ClientPacketWriter tunnelPacketWriter;
+    private Thread tunnelPacketWriterThread;
+
+    private SocketNIODataService nioService;
+
+    private Thread dataServiceThread;
+
+    private SessionManager manager;
+    private SessionHandler handler;
+
+    public TunnelRunnable(ParcelFileDescriptor tunnelInterface) throws IOException {
         tunnelWriteStream = new FileOutputStream(Objects.requireNonNull(tunnelInterface).getFileDescriptor());
         tunnelReadStream =  new FileInputStream(Objects.requireNonNull(tunnelInterface).getFileDescriptor());
+        tunnelPacketWriter = new ClientPacketWriter(tunnelWriteStream);
+        tunnelPacketWriterThread = new Thread(tunnelPacketWriter);
+        nioService = new SocketNIODataService(tunnelPacketWriter);
+        dataServiceThread = new Thread(nioService, "Socket NIO thread");
+        manager = new SessionManager();
+        handler = new SessionHandler(manager, nioService, tunnelPacketWriter);
     }
 
-    // private ClientPacketWriter tunnelPacketWriter = new ClientPacketWriter(tunnelWriteStream);
-    // private Thread clientPacketWriterThread = new Thread(tunnelPacketWriter);
-
-    // private SocketNIODataService nioService = new SocketNIODataService(vpnPacketWriter);
-    // private Thread dataServiceThread = new Thread(nioService, "Socket NIO thread");
-
-    // private SessionManager manager = new SessionManager();
-    // private SessionHandler handler = new SessionHandler(manager, nioservice, tunnelPacketWriter);
-
+    // Allocate the buffer for a single packet.
     private ByteBuffer packet = ByteBuffer.allocate(MAX_PACKET_LEN);
 
-    // private
 
     @Override
-    public void run()
-    {
+    public void run() {
         if(running) {
             Log.w(TAG, "Tunnel runnable attempted to start, but it's already running!");
             return;
         }
         Log.i(TAG, "Tunnel thread starting");
 
-        // manager.setTcpPortRedirections(portRedirections);
-        // dataServiceThread.start();
-        // tunnelPacketWriterThread.start();
+        dataServiceThread.start();
+        tunnelPacketWriterThread.start();
 
         byte[] data;
-        int length;
+        int length = 0;
         running = true;
         while (running) {
             try {
                 data = packet.array();
 
-                try{
-                    length = tunnelReadStream.read(data);
-                }
-                catch (IOException e) {
-                    Log.i(TAG, "IOException in tunnelReadStream.read(data)",e);
-                }
+                    try{
+                        length = tunnelReadStream.read(data);
+                    }
+                    catch (IOException e) {
+                        Log.i(TAG, "IOException in tunnelReadStream.read(data)",e);
+                    }
                 if (length > 0) {
                     try {
                         packet.limit(length);
-                        // handler.handlePacket(packet);
+                        handler.handlePacket(packet);
                     } catch (Exception e) {
                         String errorMessage = (e.getMessage() != null) ? e.getMessage() : e.toString();
                         Log.e(TAG, errorMessage);
 
                         /*
-                        // Port this stuff later
+                        // Port this stuff later if needed
                         boolean isIgnorable =
                                 ((e is ConnectException && errorMessage.equals("Permission denied")) ||
                         (e is ConnectException && errorMessage.equals("Network is unreachable")) ||
@@ -107,9 +116,7 @@ public class TunnelRunnable  implements Runnable {
                     Thread.sleep(10);
                 }
             } catch (InterruptedException e) {
-                Log.i(TAG, "Sleep interrupted: " + e.getMessage())
-            } catch(InterruptedIOException e) {
-                Log.i(TAG, "Read interrupted: " + e.getMessage())
+                Log.i(TAG, "Sleep interrupted: " + e.getMessage());
             }
         }
 
@@ -120,11 +127,11 @@ public class TunnelRunnable  implements Runnable {
     void stop() {
         if(running) {
             running = false;
-            // nioService.shutdown();
-            // dataServiceThread.interrupt();
+            nioService.shutdown();
+            dataServiceThread.interrupt();
 
-            // tunnelPacketWriter.shutdown();
-            // tunnelPakcetWriterThread.interrupt();
+            tunnelPacketWriter.shutdown();
+            tunnelPacketWriterThread.interrupt();
         } else {
             Log.w(TAG, "Tunnel runnable stopped, but it's not running");
         }

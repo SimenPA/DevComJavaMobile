@@ -18,7 +18,7 @@ import static com.example.devcomjavamobile.network.vpn.util.PacketUtil.calculate
 
 public class ICMPPacketFactory {
 
-    public static tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket parseICMPPacket(@NonNull ByteBuffer stream) throws PacketHeaderException {
+    public static ICMPPacket parseICMPPacket(@NonNull ByteBuffer stream) throws PacketHeaderException {
         final byte type = stream.get();
         final byte code = stream.get();
         final int checksum = stream.getShort();
@@ -30,14 +30,14 @@ public class ICMPPacketFactory {
         stream.get(data);
 
         if (type == 8) {
-            return new tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket(type, code, checksum, identifier, sequenceNumber, data);
+            return new ICMPPacket(type, code, checksum, identifier, sequenceNumber, data);
         } else {
             throw new PacketHeaderException("Unknown ICMP type (" + type + "). Only echo requests are supported");
         }
     }
 
-    public static tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket buildSuccessPacket(tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket requestPacket) throws PacketHeaderException {
-        return new tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket(
+    public static ICMPPacket buildSuccessPacket(ICMPPacket requestPacket) throws PacketHeaderException {
+        return new ICMPPacket(
                 0,
                 0,
                 0,
@@ -47,7 +47,7 @@ public class ICMPPacketFactory {
         );
     }
 
-    public static byte[] packetToBuffer(IPv4Header ipHeader, tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket packet) throws PacketHeaderException {
+    public static byte[] packetToBuffer(IPv4Header ipHeader, ICMPPacket packet) throws PacketHeaderException {
         byte[] ipData = IPPacketFactory.createIPv4HeaderData(ipHeader);
 
         ByteArrayOutputStream icmpDataBuffer = new ByteArrayOutputStream();
@@ -56,7 +56,7 @@ public class ICMPPacketFactory {
 
         icmpDataBuffer.write(asShortBytes(0 /* checksum placeholder */), 0, 2);
 
-        if (packet.type == tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket.ECHO_REQUEST_TYPE || packet.type == tech.httptoolkit.android.vpn.transport.icmp.ICMPPacket.ECHO_SUCCESS_TYPE) {
+        if (packet.type == ICMPPacket.ECHO_REQUEST_TYPE || packet.type == ICMPPacket.ECHO_SUCCESS_TYPE) {
             icmpDataBuffer.write(asShortBytes(packet.identifier), 0, 2);
             icmpDataBuffer.write(asShortBytes(packet.sequenceNumber), 0, 2);
 

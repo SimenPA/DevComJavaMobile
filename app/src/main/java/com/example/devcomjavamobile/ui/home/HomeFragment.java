@@ -17,16 +17,7 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.devcomjavamobile.R;
-import com.example.devcomjavamobile.network.DevComClient;
-import com.example.devcomjavamobile.network.TCPConnection;
-import com.example.devcomjavamobile.network.TCPServer;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
-import com.example.devcomjavamobile.network.DevComService;
-
-import static android.app.Activity.RESULT_OK;
+import com.example.devcomjavamobile.network.TunnelClient;
 
 public class HomeFragment extends Fragment {
 
@@ -49,34 +40,14 @@ public class HomeFragment extends Fragment {
 
         ipText = (EditText)root.findViewById(R.id.enterIPEditText);
         msgText = (EditText)root.findViewById(R.id.enterMsgEditText);
-        /*
-
-            Button sendMsgBtn = (Button) root.findViewById(R.id.makeTunnel);
-            sendMsgBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-
-                    Executor e = Executors.newCachedThreadPool();
-                    TCPConnection b = new TCPConnection(ipText.getText().toString(), msgText.getText().toString());
-                    e.execute(b);
-                }
-            });
-
-         */
 
         Button makeTunnel = (Button) root.findViewById(R.id.makeTunnel);
-        makeTunnel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        makeTunnel.setOnClickListener(view -> {
 
-                Intent intent  = new Intent(getActivity(), DevComClient.class);
-                startActivity(intent);
-            }
+            Intent intent = new Intent(getActivity(), TunnelClient.class);
+            startActivity(intent);
+
         });
-
-        // Thread myThread =  new Thread(new TCPServer(getActivity()));
-        // myThread.start();
-
         return root;
     }
 }
