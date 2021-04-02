@@ -3,6 +3,7 @@ package com.example.devcomjavamobile.ui.home;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ import com.example.devcomjavamobile.network.TunnelClient;
 public class HomeFragment extends Fragment {
 
     private HomeViewModel homeViewModel;
+    private static final String TAG = HomeFragment.class.getSimpleName();
 
     EditText ipText, msgText;
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -43,8 +45,9 @@ public class HomeFragment extends Fragment {
 
         Button makeTunnel = (Button) root.findViewById(R.id.makeTunnel);
         makeTunnel.setOnClickListener(view -> {
-
+            Log.d(TAG, "Attempting to create intent");
             Intent intent = new Intent(getActivity(), TunnelClient.class);
+            Log.d(TAG, "Intent created, trying to start activity");
             startActivity(intent);
 
         });

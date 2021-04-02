@@ -1,8 +1,10 @@
 package com.example.devcomjavamobile;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 
+import com.example.devcomjavamobile.network.TunnelService;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -27,11 +29,14 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
     }
-
-    private void startVpn()
-
-    {
-
+    @Override
+    protected void onActivityResult(int request, int result, Intent data) {
+        super.onActivityResult(request, result, data);
+        if(result == RESULT_OK) {
+            startService(getServiceIntent().setAction(TunnelService.START_TUNNEL));
+        }
     }
-
+    private Intent getServiceIntent() {
+        return new Intent(this, TunnelService.class);
+    }
 }

@@ -10,6 +10,7 @@
 
 package com.example.devcomjavamobile.network;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -34,13 +35,16 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
     private static final String TAG = TunnelService.class.getSimpleName();
 
-    public static final String START_TUNNEL = "com.example.devcomjavamobile.START_TUNNEL";
-    public static final String STOP_TUNNEL = "com.example.devcomjavamobile.STOP_TUNNEL";
+    public static final String START_TUNNEL = "com.example.devcomjavamobile.START";
+    public static final String STOP_TUNNEL = "com.example.devcomjavamobile.STOP";
 
     private ParcelFileDescriptor tunnelInterface;
     private TunnelRunnable tunnelRunnable;
+    private Thread tunnelRunnableThread;
 
     private TunnelService currentService = null;
+
+    private PendingIntent mConfigureIntent;
 
     public boolean isTunnelActive() {
         if(currentService == null) return false;
@@ -52,6 +56,9 @@ public class TunnelService extends VpnService implements IProtectSocket {
     public void onCreate()
     {
         super.onCreate();
+        Log.d(TAG, "onCreate from TunnelServive here dood");
+        //mConfigureIntent = PendingIntent.getActivity(this, 0, new Intent(this, TunnelClient.class),
+        // PendingIntent.FLAG_UPDATE_CURRENT);
         currentService = this;
     }
 
@@ -61,11 +68,11 @@ public class TunnelService extends VpnService implements IProtectSocket {
         super.onDestroy();
         TunnelService currentService = null;
     }
-
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         currentService = this;
-        Log.i(TAG, "onStartCommand called");
-        Log.i(TAG, intent.getAction() != null ? intent.getAction() : "no action");
+        Log.d(TAG, "onStartCommand called");
+        Log.d(TAG, intent.getAction() != null ? intent.getAction() : "no action");
 
 
         if(Objects.equals(intent.getAction(), START_TUNNEL))
@@ -114,8 +121,10 @@ public class TunnelService extends VpnService implements IProtectSocket {
                 .setBlocking(true)
                 .establish();
         if(tunnelInterface == null) {
+            Log.d(TAG, "Tunnel interface NOT established");
             return false;
         } else {
+            Log.d(TAG, "Tunnel interface established");
             this.tunnelInterface = tunnelInterface;
         }
 
@@ -125,16 +134,20 @@ public class TunnelService extends VpnService implements IProtectSocket {
         SocketProtector.getInstance().setProtector(this);
 
         try {
+            Log.d(TAG, "Starting tunnelRunnable");
             TunnelRunnable tunnelRunnable = new TunnelRunnable(tunnelInterface);
         } catch(IOException e) {
             Log.w("IOException", e);
         }
+        Log.d(TAG, "Attempting to start Thread with TunnelRunnable");
 
-        new Thread(tunnelRunnable, "Tunnel thread").start();
+        tunnelRunnableThread = new Thread(tunnelRunnable, "Tunnel thread");
+        tunnelRunnableThread.start();
+
+        Log.d(TAG, "Thread is supposed to have started");
 
         return true;
     }
-
 
     private boolean restartTunnel() {
         Log.i(TAG, "Tunnel stopping for a restart...");

@@ -72,7 +72,7 @@ public class TunnelRunnable implements Runnable {
             Log.w(TAG, "Tunnel runnable attempted to start, but it's already running!");
             return;
         }
-        Log.i(TAG, "Tunnel thread starting");
+        Log.d(TAG, "Tunnel thread starting");
 
         dataServiceThread.start();
         tunnelPacketWriterThread.start();
