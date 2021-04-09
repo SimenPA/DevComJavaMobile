@@ -116,11 +116,11 @@ public class TunnelService extends VpnService implements IProtectSocket {
         if(this.tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
                 //.addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64)
-                .addAddress("169.254.61.43", 32)
+                .addAddress("169.254.61.42", 32)
                 .addRoute("0.0.0.0", 0)
                 .setSession(getString(R.string.app_name))
                 .setMtu(MAX_PACKET_LEN)
-                .setBlocking(true)
+                .setBlocking(false)
                 .establish();
         if(tunnelInterface == null) {
             Log.d(TAG, "Tunnel interface NOT established");
