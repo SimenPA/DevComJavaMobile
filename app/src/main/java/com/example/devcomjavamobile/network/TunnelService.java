@@ -135,10 +135,11 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         try {
             Log.d(TAG, "Starting tunnelRunnable");
-            TunnelRunnable tunnelRunnable = new TunnelRunnable(tunnelInterface);
+            tunnelRunnable = new TunnelRunnable(tunnelInterface);
         } catch(IOException e) {
             Log.w("IOException", e);
         }
+
         Log.d(TAG, "Attempting to start Thread with TunnelRunnable");
 
         tunnelRunnableThread = new Thread(tunnelRunnable, "Tunnel thread");
