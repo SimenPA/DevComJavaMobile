@@ -4,7 +4,11 @@ import android.os.AsyncTask;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.concurrent.Executors;
 
 public class TCPConnection implements Runnable
@@ -22,7 +26,17 @@ public class TCPConnection implements Runnable
     @Override
     public void run() {
         try {
-            s = new Socket(ip, 9700);
+            /*
+            try
+            {
+                InetAddress address = InetAddress.getByName(ip);
+
+                boolean isIPv6 = address instanceof Inet6Address;
+            }
+
+             */
+            InetAddress address = InetAddress.getByName(ip);
+            s = new Socket(address, 9700);
             dos =  new DataOutputStream(s.getOutputStream());
             dos.writeUTF(msg);
 

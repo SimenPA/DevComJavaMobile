@@ -6,26 +6,22 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment">
 
-    <TextView
-        android:id="@+id/text_home"
-        android:layout_width="264dp"
-        android:layout_height="26dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:textAlignment="center"
-        android:textSize="20sp"
+    <Button
+        android:id="@+id/stopTunnel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop Tunnel"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintHorizontal_bias="0.56"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.493" />
+        app:layout_constraintTop_toBottomOf="@+id/makeTunnel"
+        app:layout_constraintVertical_bias="0.385" />
 
     <EditText
         android:id="@+id/enterIPEditText"
-        android:layout_width="384dp"
-        android:layout_height="47dp"
+        android:layout_width="350dp"
+        android:layout_height="50dp"
         android:ems="10"
         android:inputType="textPersonName"
         android:text="Enter IP"
@@ -60,5 +56,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/enterIPEditText"
         app:layout_constraintVertical_bias="0.291" />
+
+    <Button
+        android:id="@+id/sendMsgBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="130dp"
+        android:layout_marginTop="60dp"
+        android:layout_marginEnd="130dp"
+        android:layout_marginBottom="60dp"
+        android:text="Send message"
+        app:layout_constraintBottom_toTopOf="@+id/makeTunnel"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/enterMsgEditText"
+        app:layout_constraintVertical_bias="0.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

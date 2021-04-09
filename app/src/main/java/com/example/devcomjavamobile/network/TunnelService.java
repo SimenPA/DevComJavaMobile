@@ -81,6 +81,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
             if(isActive()) tunnelStarted = restartTunnel(); else  tunnelStarted = startTunnel();
 
             if(tunnelStarted) return Service.START_REDELIVER_INTENT;
+            else { stopTunnel(); }
 
         } else if(Objects.equals(intent.getAction(), STOP_TUNNEL)) stopTunnel();
 
@@ -114,7 +115,8 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         if(this.tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
-                .addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64)
+                //.addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64)
+                .addAddress("169.254.61.43", 32)
                 .addRoute("0.0.0.0", 0)
                 .setSession(getString(R.string.app_name))
                 .setMtu(MAX_PACKET_LEN)

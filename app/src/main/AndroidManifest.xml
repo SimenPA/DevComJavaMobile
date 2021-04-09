@@ -31,7 +31,6 @@
             </intent-filter>
         </service>
 
-        <activity android:name=".network.TunnelClient"/>
 
     </application>
 
