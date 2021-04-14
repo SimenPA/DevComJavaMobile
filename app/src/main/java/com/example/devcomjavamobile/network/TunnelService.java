@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
+import static android.system.OsConstants.AF_INET;
+import static android.system.OsConstants.AF_INET6;
+
 
 public class TunnelService extends VpnService implements IProtectSocket {
 
@@ -115,12 +118,13 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         if(this.tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
-                //.addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64)
-                .addAddress("169.254.61.42", 32)
+                .addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64)
+                //.addAddress("169.254.61.42", 32)
+                .allowFamily(AF_INET6)
+                .allowFamily(AF_INET)
                 .addRoute("0.0.0.0", 0)
-                .setSession(getString(R.string.app_name))
                 .setMtu(MAX_PACKET_LEN)
-                .setBlocking(false)
+                .setBlocking(true)
                 .establish();
         if(tunnelInterface == null) {
             Log.d(TAG, "Tunnel interface NOT established");

@@ -7,70 +7,83 @@
     tools:context=".ui.home.HomeFragment">
 
     <Button
+        android:id="@+id/stopServerBtn"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:text="Stop Server"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.50"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/startServerBtn" />
+
+    <Button
+        android:id="@+id/startServerBtn"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="Start Server"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.50"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sendMsgBtn" />
+
+    <Button
         android:id="@+id/stopTunnel"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:text="Stop Tunnel"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.56"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/makeTunnel"
-        app:layout_constraintVertical_bias="0.385" />
+        app:layout_constraintTop_toBottomOf="@+id/makeTunnel" />
 
     <EditText
         android:id="@+id/enterIPEditText"
         android:layout_width="350dp"
         android:layout_height="50dp"
+        android:layout_marginTop="10dp"
         android:ems="10"
+        android:hint="Enter IP"
         android:inputType="textPersonName"
-        android:text="Enter IP"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="fe80:646d:6d73:0000:c775:f615:9c29:fe06"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.165" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/makeTunnel"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
         android:text="Establish tunnel"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.555"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.679" />
+        app:layout_constraintTop_toBottomOf="@+id/stopServerBtn" />
 
     <EditText
         android:id="@+id/enterMsgEditText"
         android:layout_width="350dp"
         android:layout_height="44dp"
+        android:layout_marginTop="10dp"
         android:ems="10"
+        android:hint="Enter message"
         android:inputType="textPersonName"
-        android:text="Enter message"
-        app:layout_constraintBottom_toTopOf="@+id/makeTunnel"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.491"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/enterIPEditText"
-        app:layout_constraintVertical_bias="0.291" />
+        app:layout_constraintTop_toBottomOf="@+id/enterIPEditText" />
 
     <Button
         android:id="@+id/sendMsgBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="130dp"
-        android:layout_marginTop="60dp"
-        android:layout_marginEnd="130dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginTop="10dp"
         android:text="Send message"
-        app:layout_constraintBottom_toTopOf="@+id/makeTunnel"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/enterMsgEditText"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@+id/enterMsgEditText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

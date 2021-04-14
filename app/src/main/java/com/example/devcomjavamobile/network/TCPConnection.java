@@ -35,7 +35,7 @@ public class TCPConnection implements Runnable
             }
 
              */
-            InetAddress address = InetAddress.getByName(ip);
+            InetAddress address = Inet6Address.getByName(ip);
             s = new Socket(address, 9700);
             dos =  new DataOutputStream(s.getOutputStream());
             dos.writeUTF(msg);

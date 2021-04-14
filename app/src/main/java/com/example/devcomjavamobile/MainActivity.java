@@ -1,6 +1,7 @@
 package com.example.devcomjavamobile;
 
 import android.content.Intent;
+import android.net.VpnService;
 import android.os.Bundle;
 import android.widget.Button;
 
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void startTunnel() {
-
+        VpnService.prepare(this);
         startService(getServiceIntent().setAction(TunnelService.START_TUNNEL));
     }
 }
