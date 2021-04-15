@@ -103,8 +103,8 @@ public class IPPacketFactory {
 
         final byte versionAndHeaderLength = stream.get();
         final byte ipVersion = (byte) (versionAndHeaderLength >> 4);
-        if (ipVersion != 0x04) {
-            throw new PacketHeaderException("Invalid IPv4 header. IP version should be 4 but was " + ipVersion);
+        if (ipVersion == 0x06) {
+            return null;
         }
 
         final byte internetHeaderLength = (byte) (versionAndHeaderLength & 0x0F);
@@ -136,4 +136,20 @@ public class IPPacketFactory {
                 mayFragment, lastFragment, fragmentOffset, timeToLive, protocol, checksum, sourceIp,
                 desIp);
     }
+
+    public static IPv6Header createIPv6Header(@NonNull ByteBuffer stream) {
+
+        byte ipVersion = 0x06;
+        byte trafficClass =  stream.get();
+        byte flowLabel = stream.get();
+        short payloadLen = stream.getShort();
+        byte nextHdr = stream.get();
+        byte hopLimit = stream.get();
+        byte[] sourceIP = new byte[16];
+        byte[] destinationIP = new byte[16];
+        stream.get(sourceIP);
+        stream.get(destinationIP);
+        return new IPv6Header(ipVersion, trafficClass, flowLabel, payloadLen, nextHdr, hopLimit, sourceIP, destinationIP);
+    }
+
 }

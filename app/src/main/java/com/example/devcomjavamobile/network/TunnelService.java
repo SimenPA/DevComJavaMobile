@@ -122,7 +122,8 @@ public class TunnelService extends VpnService implements IProtectSocket {
                 //.addAddress("169.254.61.42", 32)
                 .allowFamily(AF_INET6)
                 .allowFamily(AF_INET)
-                .addRoute("0.0.0.0", 0)
+                .addRoute("0.0.0.0", 0) // All IPv4 addresses
+                .addRoute("0000:0000:0000:0000:0000:0000:0000:0000", 0) // All IPv6 addresses
                 .setMtu(MAX_PACKET_LEN)
                 .setBlocking(true)
                 .establish();

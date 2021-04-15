@@ -31,6 +31,7 @@ import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
 import com.example.devcomjavamobile.network.vpn.transport.PacketHeaderException;
 import com.example.devcomjavamobile.network.vpn.transport.icmp.ICMPPacket;
 import com.example.devcomjavamobile.network.vpn.transport.icmp.ICMPPacketFactory;
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPv6Header;
 import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPHeader;
 import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.udp.UDPHeader;
@@ -90,17 +91,27 @@ public class SessionHandler {
         stream.get(rawPacket, 0, stream.limit());
         stream.rewind();
 
-        final IPv4Header ipHeader = IPPacketFactory.createIPv4Header(stream);
 
-        if (ipHeader.getProtocol() == 6) {
-            handleTCPPacket(stream, ipHeader);
-        } else if (ipHeader.getProtocol() == 17) {
-            handleUDPPacket(stream, ipHeader);
-        } else if (ipHeader.getProtocol() == 1) {
-            handleICMPPacket(stream, ipHeader);
-        } else {
-            Log.w(TAG, "Unsupported IP protocol: " + ipHeader.getProtocol());
+        final IPv4Header ipv4Header = IPPacketFactory.createIPv4Header(stream);
+        IPv6Header ipv6Header;
+        if(ipv4Header == null)
+        {
+            ipv6Header = IPPacketFactory.createIPv6Header(stream);
+            Log.i(TAG, "Got IPv6 package with source IP: " + ipv6Header.getSourceIPString() + " and destination IP: " + ipv6Header.getDestinationIPString());
         }
+        else {
+            if (ipv4Header.getProtocol() == 6) {
+                handleTCPPacket(stream, ipv4Header);
+            } else if (ipv4Header.getProtocol() == 17) {
+                handleUDPPacket(stream, ipv4Header);
+            } else if (ipv4Header.getProtocol() == 1) {
+                handleICMPPacket(stream, ipv4Header);
+            } else {
+                Log.w(TAG, "Unsupported IP protocol: " + ipv4Header.getProtocol());
+            }
+        }
+
+
     }
 
     private void handleUDPPacket(ByteBuffer clientPacketData, IPv4Header ipHeader) throws PacketHeaderException, IOException {

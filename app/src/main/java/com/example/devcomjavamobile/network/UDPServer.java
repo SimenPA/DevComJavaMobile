@@ -42,6 +42,7 @@ public class UDPServer implements Runnable {
         stopped.set(true);
         ds.close();
         Toast.makeText(activity, "UDP Server has stopped", Toast.LENGTH_SHORT).show();
+        Log.i("UDPServer", "UDP Server has started");
         worker.interrupt();
     }
 
@@ -67,25 +68,26 @@ public class UDPServer implements Runnable {
             packet = new DatagramPacket(lmessage, lmessage.length);
             activity.runOnUiThread(new Runnable() {
                 public void run() {
-                    Toast.makeText(activity, "Server has started", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(activity, "UDP Server has started", Toast.LENGTH_SHORT).show();
                 }
             });
+            Log.i("UDPServer", "UDP Server has started");
             while (isRunning()) {
                 try{
                     ds.receive(packet);
+                    Log.i("UDPServer", "UDP packet received. Reading");
+                    message = new String(lmessage, 0, packet.getLength());
+                    String finalMessage = message;
+                    Log.i("UDPServer", "UDP Message received: " + finalMessage);
+                    activity.runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 } catch (SocketException e)
                 {
                     if(e.getMessage().equals("Socket closed")) Log.i("UDPServer", "Ignoring socket closed exception");
                 }
-                Log.i("UDPServer", "Packet received. Reading");
-                message = new String(lmessage, 0, packet.getLength());
-                String finalMessage = message;
-                Log.i("UDPServer", "Messager received: " + finalMessage);
-                activity.runOnUiThread(new Runnable() {
-                    public void run() {
-                        Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show();
-                    }
-                });
 
             }
         }

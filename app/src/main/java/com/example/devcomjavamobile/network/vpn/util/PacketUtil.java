@@ -256,6 +256,37 @@ public class PacketUtil {
                 (addressInt & 0x000000FF);
     }
 
+    public static String byteArrayToIPv6Address(byte[] ipv6AddressArray)
+    {
+        // Convert bits to hexa or something. Byte array to hexa. I don't know
+        StringBuilder str = new StringBuilder();
+
+        byte  b = 0;
+
+        for(int i = 0; i < ipv6AddressArray.length; i++) {
+            b = ipv6AddressArray[i];
+            int firstNibble = ((b >> 4) & 0x0F);
+            int secondNibble = (b & 0x0F);
+            str.append(Integer.toString(firstNibble, 16));
+            str.append(Integer.toString(secondNibble, 16));
+            if(i % 2 != 0) str.append(":");
+        }
+        return str.toString();
+
+    }
+
+    /*
+    public static String byteToBits(final byte val) {
+        final StringBuilder result = new StringBuilder();
+
+        for (int i=0; i<8; i++) {
+            result.append((int)(val >> (8-(i+1)) & 0x0001));
+        }
+
+        return result.toString();
+    }
+    */
+
     /**
      * get IP address of device
      * @return IP Address
