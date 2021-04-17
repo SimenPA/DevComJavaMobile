@@ -22,8 +22,10 @@ import android.util.Log;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
 import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
+import com.example.devcomjavamobile.network.vpn.transport.RoutingTable;
 
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -49,6 +51,10 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
     private PendingIntent mConfigureIntent;
 
+    public LinkedList<RoutingTable> peers;
+
+
+
     public boolean isTunnelActive() {
         if(currentService == null) return false;
         else return currentService.isActive();
@@ -62,7 +68,13 @@ public class TunnelService extends VpnService implements IProtectSocket {
         Log.d(TAG, "onCreate from TunnelServive here dood");
         //mConfigureIntent = PendingIntent.getActivity(this, 0, new Intent(this, TunnelClient.class),
         // PendingIntent.FLAG_UPDATE_CURRENT);
+        // getFilesDir(); // get key pair file
         currentService = this;
+        RoutingTable peerOne = new RoutingTable();
+        peerOne.addCommunity("omms");
+        peerOne.addPhysicalAddress("10.0.2.17");
+        peerOne.setFingerPrint("FINGERPRINT");
+        peers.add(peerOne);
     }
 
     @Override
@@ -118,7 +130,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         if(this.tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
-                .addAddress("fe80:646d:6d73:0000:c775:f615:9c29:fe06", 64)
+                .addAddress("fe80:6661:6d69:6c79:c775:f615:9c29:fe06", 64) // fe80 prefix, community "family", fingerprint
                 //.addAddress("169.254.61.42", 32)
                 .allowFamily(AF_INET6)
                 .allowFamily(AF_INET)

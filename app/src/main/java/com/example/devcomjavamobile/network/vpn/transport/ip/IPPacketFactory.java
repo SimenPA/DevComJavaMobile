@@ -94,20 +94,28 @@ public class IPPacketFactory {
      * @param stream array of byte
      * @return a new instance of IPv4Header
      */
-    public static IPv4Header createIPv4Header(@NonNull ByteBuffer stream) throws PacketHeaderException{
+    public static Object createIPHeader(@NonNull ByteBuffer stream) throws PacketHeaderException{
         //avoid Index out of range
         if (stream.remaining() < 20) {
             throw new PacketHeaderException("Minimum IPv4 header is 20 bytes. There are less "
                     + "than 20 bytes from start position to the end of array.");
         }
 
-        final byte versionAndHeaderLength = stream.get();
-        final byte ipVersion = (byte) (versionAndHeaderLength >> 4);
-        if (ipVersion == 0x06) {
-            return null;
+        final byte firstByte = stream.get(); // version and header length if IPv4/first nibble of Traffic class if IPv6
+        final byte ipVersion = (byte) (firstByte >> 4);
+        if (ipVersion == 0x04) {
+            final byte internetHeaderLength = (byte) (firstByte & 0x0F);
+            return createIPv4Header(stream, internetHeaderLength);
+        } else if (ipVersion == 0x06) {
+            final byte firstNibbleTrafficClass = (byte) (firstByte & 0x0F);
+            return createIPv6Header(stream, firstNibbleTrafficClass);
+        } else {
+            throw new PacketHeaderException("Unable to parse IP Version");
         }
+    }
 
-        final byte internetHeaderLength = (byte) (versionAndHeaderLength & 0x0F);
+    public static IPv4Header createIPv4Header(@NonNull ByteBuffer stream, byte internetHeaderLength) throws PacketHeaderException {
+        final byte ipVersion = 0x04;
         if(stream.capacity() < internetHeaderLength * 4) {
             throw new PacketHeaderException("Not enough space in array for IP header");
         }
@@ -137,19 +145,25 @@ public class IPPacketFactory {
                 desIp);
     }
 
-    public static IPv6Header createIPv6Header(@NonNull ByteBuffer stream) {
+    public static IPv6Header createIPv6Header(@NonNull ByteBuffer stream, byte firstNibbleTrafficClass) {
 
-        byte ipVersion = 0x06;
-        byte trafficClass =  stream.get();
-        byte flowLabel = stream.get();
+        final byte ipVersion = 0x06;
+        final byte trafficAndFlow = stream.get();
+        final byte trafficClass = (byte) (firstNibbleTrafficClass << 4 | (byte) (trafficAndFlow >> 2));
+        short flowLabel = (short) ((trafficAndFlow & 0x0f) | stream.getShort());
         short payloadLen = stream.getShort();
-        byte nextHdr = stream.get();
-        byte hopLimit = stream.get();
+        short nextHdrAndHopLimit =  stream.getShort();
+        byte nextHdr = (byte) (nextHdrAndHopLimit >> 8);
+        byte hopLimit = (byte) ( nextHdr & 0xff);
         byte[] sourceIP = new byte[16];
         byte[] destinationIP = new byte[16];
         stream.get(sourceIP);
         stream.get(destinationIP);
         return new IPv6Header(ipVersion, trafficClass, flowLabel, payloadLen, nextHdr, hopLimit, sourceIP, destinationIP);
+    }
+
+    public static void handleIPv6Packet(IPv6Header iPv6Header) {
+        iPv6Header.getTrafficClass();
     }
 
 }

@@ -269,7 +269,7 @@ public class PacketUtil {
             int secondNibble = (b & 0x0F);
             str.append(Integer.toString(firstNibble, 16));
             str.append(Integer.toString(secondNibble, 16));
-            if(i % 2 != 0) str.append(":");
+            if(i % 2 != 0 && i != ipv6AddressArray.length - 1) str.append(":");
         }
         return str.toString();
 

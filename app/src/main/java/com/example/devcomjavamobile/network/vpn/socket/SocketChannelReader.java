@@ -216,7 +216,7 @@ class SocketChannelReader {
                     buffer.clear();
                 }
             } while(len > 0);
-        }catch(NotYetConnectedException ex){
+        } catch(NotYetConnectedException ex){
             Log.e(TAG,"failed to read from unconnected UDP socket");
         } catch (IOException e) {
             Log.e(TAG,"Failed to read from UDP socket, aborting connection");

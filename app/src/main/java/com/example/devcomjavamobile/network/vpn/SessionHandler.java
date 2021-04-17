@@ -41,10 +41,6 @@ import com.example.devcomjavamobile.network.vpn.util.PacketUtil;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
-import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
-import com.example.devcomjavamobile.network.vpn.Session;
-import com.example.devcomjavamobile.network.vpn.SessionManager;
-
 
 /**
  * handle VPN client request and response. it create a new session for each VPN client.
@@ -92,14 +88,12 @@ public class SessionHandler {
         stream.rewind();
 
 
-        final IPv4Header ipv4Header = IPPacketFactory.createIPv4Header(stream);
+        final Object IPHeader = IPPacketFactory.createIPHeader(stream);
+        IPv4Header ipv4Header;
         IPv6Header ipv6Header;
-        if(ipv4Header == null)
+        if(IPHeader instanceof IPv4Header)
         {
-            ipv6Header = IPPacketFactory.createIPv6Header(stream);
-            Log.i(TAG, "Got IPv6 package with source IP: " + ipv6Header.getSourceIPString() + " and destination IP: " + ipv6Header.getDestinationIPString());
-        }
-        else {
+            ipv4Header = (IPv4Header) IPHeader;
             if (ipv4Header.getProtocol() == 6) {
                 handleTCPPacket(stream, ipv4Header);
             } else if (ipv4Header.getProtocol() == 17) {
@@ -110,10 +104,45 @@ public class SessionHandler {
                 Log.w(TAG, "Unsupported IP protocol: " + ipv4Header.getProtocol());
             }
         }
+        // IPv6 stuff
+        else if(IPHeader instanceof IPv6Header) {
+            ipv6Header = (IPv6Header) IPHeader;
+            handleIPv6Packet(stream, ipv6Header);
+            /*
+            Log.i(TAG, "Got IPv6 package with source IP: " + ipv6Header.getSourceIPString() + " and destination IP: " + ipv6Header.getDestinationIPString());
+            Log.i(TAG, "Traffic class: " + ipv6Header.getTrafficClass());
+            Log.i(TAG, "Flow label: " + ipv6Header.getFlowLabel());
+            Log.i(TAG, "Payload length: " + ipv6Header.getPayloadLen());
+            Log.i(TAG, "Next header:" + ipv6Header.getNextHdr());
+            Log.i(TAG, "Hop limit:" + ipv6Header.getHopLimit());
+            UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(stream);
+            Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
+            Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
+            byte data = 0;
+            int i = 1;
+            while(stream.hasRemaining())
+            {
+                data =  stream.get();
+                char letter = (char) data;
+                Log.i(TAG, "Data " + i + ": " + data + " which is char " + letter);
+                i++;
+            }
+            */
+        }
+        else {
+            Log.w(TAG, "Unsupported IP header");
+        }
 
 
     }
 
+    private void handleIPv6Packet(ByteBuffer clientPacketData, IPv6Header iPv6Header) throws PacketHeaderException, IOException {
+        UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(clientPacketData);
+        Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
+        Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
+
+
+    }
     private void handleUDPPacket(ByteBuffer clientPacketData, IPv4Header ipHeader) throws PacketHeaderException, IOException {
         UDPHeader udpheader = UDPPacketFactory.createUDPHeader(clientPacketData);
 
@@ -277,7 +306,8 @@ public class SessionHandler {
         Log.d(TAG,"00000000000 FIN-ACK packet data to vpn client 000000000000");
         IPv4Header vpnip = null;
         try {
-            vpnip = IPPacketFactory.createIPv4Header(stream);
+            Object obj = IPPacketFactory.createIPHeader(stream);
+            vpnip = (IPv4Header) obj;
         } catch (PacketHeaderException e) {
             e.printStackTrace();
         }

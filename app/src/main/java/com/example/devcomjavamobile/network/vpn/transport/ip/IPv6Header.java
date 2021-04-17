@@ -29,10 +29,11 @@ import static com.example.devcomjavamobile.network.vpn.util.PacketUtil.*;
 
 /*
 * Modified to be IPv6 header.
+* Data structure for IPv6 header as definied in RFC 2460
 * Author: Simen Persch Andersen
 * Date: 15.04.2021
  */
-public class IPv6Header {
+public class IPv6Header extends IPHeader {
     //IP packet is the four-bit version field. For IPv4, this has a value of 4 (hence the name IPv4).
     private byte ipVersion;
 
@@ -44,6 +45,7 @@ public class IPv6Header {
 
     // length in bytes(?) of the payload that follows
     private short payloadLen = 0;
+
 
     // Point to the first extension header, which are hop-by-hop, routing, fragment, destination options, authenatican or encapsulating security payload headers
     // More info @
@@ -67,7 +69,7 @@ public class IPv6Header {
     public IPv6Header(byte ipVersion, byte trafficClass,
                       short flowLabel, short payloadLen, byte nextHdr,
                       byte hopLimit, byte[] sourceIP, byte[] destinationIP){
-        this.ipVersion = ipVersion;
+        super(ipVersion);
         this.trafficClass = trafficClass;
         this.flowLabel = flowLabel;
         this.payloadLen = payloadLen;
@@ -99,6 +101,9 @@ public class IPv6Header {
     public void setPayloadLen(short payloadLen) {
         this.payloadLen = payloadLen;
     }
+
+    public byte getNextHdr() { return nextHdr; }
+
     public byte getHopLimit() {
         return hopLimit;
     }

@@ -91,7 +91,7 @@ public class TunnelRunnable implements Runnable {
                         Log.i(TAG, "IOException in tunnelReadStream.read(data)",e);
                     }
                 if (length > 0) {
-                    Log.i(TAG, "Packet inc");
+                    // Log.i(TAG, "Packet inc");
                     try {
                         packet.limit(length);
                         handler.handlePacket(packet);
