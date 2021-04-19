@@ -3,6 +3,7 @@ package com.example.devcomjavamobile;
 import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 
 import com.example.devcomjavamobile.network.TunnelService;
@@ -18,6 +19,8 @@ import androidx.navigation.ui.NavigationUI;
 
 public class MainActivity extends AppCompatActivity {
 
+    final static int START_TUNNEL =  123;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +35,17 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == RESULT_OK)
+        {
+            startService(getServiceIntent().setAction(TunnelService.START_TUNNEL));
+        }
+
+
+    }
     private Intent getServiceIntent() {
         return new Intent(this, TunnelService.class);
     }
@@ -40,8 +54,16 @@ public class MainActivity extends AppCompatActivity {
         startService(getServiceIntent().setAction(TunnelService.STOP_TUNNEL));
     }
 
+
     public void startTunnel() {
-        VpnService.prepare(this);
-        startService(getServiceIntent().setAction(TunnelService.START_TUNNEL));
+        Intent vpnIntent = VpnService.prepare(this);
+        boolean vpnNotConfigured = vpnIntent != null;
+        if (vpnNotConfigured) {
+            startActivityForResult(vpnIntent, START_TUNNEL);
+        } else {
+            onActivityResult(START_TUNNEL, RESULT_OK, null);
+        }
     }
+
+
 }

@@ -16,9 +16,11 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
+import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
 import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
@@ -65,11 +67,14 @@ public class TunnelService extends VpnService implements IProtectSocket {
     public void onCreate()
     {
         super.onCreate();
-        Log.d(TAG, "onCreate from TunnelServive here dood");
         //mConfigureIntent = PendingIntent.getActivity(this, 0, new Intent(this, TunnelClient.class),
         // PendingIntent.FLAG_UPDATE_CURRENT);
         // getFilesDir(); // get key pair file
         currentService = this;
+        Log.i(TAG, "Model: " + Build.MANUFACTURER);
+        Log.i(TAG, "Model: " + Build.MODEL);
+        Log.i(TAG, "");
+        peers = new LinkedList<>();
         RoutingTable peerOne = new RoutingTable();
         peerOne.addCommunity("omms");
         peerOne.addPhysicalAddress("10.0.2.17");
