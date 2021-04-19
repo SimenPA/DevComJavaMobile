@@ -19,6 +19,7 @@ import android.net.VpnService;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
@@ -169,8 +170,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
         tunnelRunnableThread = new Thread(tunnelRunnable, "Tunnel thread");
         tunnelRunnableThread.start();
 
-        Log.d(TAG, "Thread is supposed to have started");
-
+        Toast.makeText(this, "Tunnel Service has started", Toast.LENGTH_SHORT).show();
         return true;
     }
 
@@ -217,6 +217,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
         stopSelf();
 
         currentService = null;
+        Toast.makeText(this, "Tunnel Service has stopped", Toast.LENGTH_SHORT).show();
     }
 
     private boolean isActive() {

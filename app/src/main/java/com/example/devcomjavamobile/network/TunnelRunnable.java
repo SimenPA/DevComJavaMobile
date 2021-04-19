@@ -11,9 +11,11 @@
 
 package com.example.devcomjavamobile.network;
 
+import android.app.Activity;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.SessionHandler;
 import com.example.devcomjavamobile.network.vpn.SessionManager;

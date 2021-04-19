@@ -38,12 +38,18 @@ public class UDPServer implements Runnable {
     }
 
     public void interrupt() {
-        running.set(false);
-        stopped.set(true);
-        ds.close();
-        Toast.makeText(activity, "UDP Server has stopped", Toast.LENGTH_SHORT).show();
-        Log.i("UDPServer", "UDP Server has started");
-        worker.interrupt();
+        if(isRunning())
+        {
+            running.set(false);
+            stopped.set(true);
+            ds.close();
+            Toast.makeText(activity, "UDP Server has stopped", Toast.LENGTH_SHORT).show();
+            Log.i("UDPServer", "UDP Server has started");
+            worker.interrupt();
+        }
+        else {
+            Toast.makeText(activity, "UDP Server is not running", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public boolean isRunning() {
