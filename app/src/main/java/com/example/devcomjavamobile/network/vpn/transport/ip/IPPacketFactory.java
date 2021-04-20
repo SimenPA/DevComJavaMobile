@@ -162,8 +162,4 @@ public class IPPacketFactory {
         return new IPv6Header(ipVersion, trafficClass, flowLabel, payloadLen, nextHdr, hopLimit, sourceIP, destinationIP);
     }
 
-    public static void handleIPv6Packet(IPv6Header iPv6Header) {
-        iPv6Header.getTrafficClass();
-    }
-
 }

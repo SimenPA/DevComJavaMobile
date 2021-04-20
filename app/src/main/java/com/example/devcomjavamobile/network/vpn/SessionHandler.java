@@ -17,14 +17,21 @@
 package com.example.devcomjavamobile.network.vpn;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
+import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
+import com.example.devcomjavamobile.network.vpn.transport.RoutingTable;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
@@ -62,10 +69,13 @@ public class SessionHandler {
 
     private final ExecutorService pingThreadpool;
 
-    public SessionHandler(SessionManager manager, SocketNIODataService nioService, ClientPacketWriter writer) {
+    private LinkedList<RoutingTable> peers;
+
+    public SessionHandler(SessionManager manager, SocketNIODataService nioService, ClientPacketWriter writer, LinkedList<RoutingTable> peers) {
         this.manager = manager;
         this.nioService = nioService;
         this.writer = writer;
+        this.peers = peers;
 
         // Pool of threads to synchronously proxy ICMP ping requests in the background. We need to
         // carefully limit these, or a ping flood can cause us big big problems.
@@ -137,10 +147,66 @@ public class SessionHandler {
     }
 
     private void handleIPv6Packet(ByteBuffer clientPacketData, IPv6Header iPv6Header) throws PacketHeaderException, IOException {
-        UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(clientPacketData);
-        Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
-        Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
 
+        //UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(clientPacketData);
+        //Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
+        //Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
+
+        Log.d(TAG, "Got IPv6 package inc");
+
+        String destinationIP = iPv6Header.getDestinationIPString();
+        if(destinationIP.substring(0, 4).equals("fe80")) // Link-local
+        {
+            Log.d(TAG, "This IPv6 package is link-local(fe80)");
+            String fingerPrint = destinationIP.substring(20, 39);
+            boolean deviceFound = false;
+            for(RoutingTable b : peers) {
+                if (b.getFingerPrint().equals(fingerPrint)) {
+                    deviceFound = true;
+                    Log.d(TAG, "Device found, trying to send");
+                    /*
+                    DatagramChannel channel;
+
+                    channel = DatagramChannel.open();
+                    channel.socket().setSoTimeout(0);
+                    channel.configureBlocking(false);
+                    SocketProtector protector = SocketProtector.getInstance();
+                    protector.protect(channel.socket());
+                    */
+                    InetAddress serverAddress = InetAddress.getByName(b.getPhysicalAddresses().getFirst());
+                    DatagramSocket socket = new DatagramSocket();
+                    // SocketProtector protector = new SocketProtector();
+                    // protector.protect(socket);
+                    if (!socket.getBroadcast()) socket.setBroadcast(true);
+                    byte[] buf = new byte[clientPacketData.remaining()];
+                    clientPacketData.get(buf);
+                    DatagramPacket packet = new DatagramPacket(buf, buf.length,
+                            serverAddress, 9700);
+                    Log.i(TAG, "Trying to forward message to :" + b.getFingerPrint());
+                    socket.send(packet);
+                    socket.close();
+
+                    Log.d(TAG, "Package sent");
+                }
+            }
+            if(!deviceFound) { Log.d(TAG, "Device wasn't found"); }
+            //
+            /*
+            * TODO: Handle link-local IPv6 packets where device hasn't been found
+            *
+            if(!deviceFound)
+            {
+                // unknown device, pass on
+            }
+             */
+        }
+        /*
+        * TODO: Pass on
+         *
+        else {
+            // not link-local address, we don't care about this and pass it on
+        }
+        */
 
     }
     private void handleUDPPacket(ByteBuffer clientPacketData, IPv4Header ipHeader) throws PacketHeaderException, IOException {

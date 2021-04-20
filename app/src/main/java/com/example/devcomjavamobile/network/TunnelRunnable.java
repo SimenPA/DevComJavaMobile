@@ -20,12 +20,14 @@ import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.SessionHandler;
 import com.example.devcomjavamobile.network.vpn.SessionManager;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
+import com.example.devcomjavamobile.network.vpn.transport.RoutingTable;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
 import java.util.Objects;
 
 public class TunnelRunnable implements Runnable {
@@ -53,7 +55,8 @@ public class TunnelRunnable implements Runnable {
     private SessionManager manager;
     private SessionHandler handler;
 
-    public TunnelRunnable(ParcelFileDescriptor tunnelInterface) throws IOException {
+
+    public TunnelRunnable(ParcelFileDescriptor tunnelInterface, LinkedList<RoutingTable> peers) throws IOException {
         tunnelWriteStream = new FileOutputStream(Objects.requireNonNull(tunnelInterface).getFileDescriptor());
         tunnelReadStream =  new FileInputStream(Objects.requireNonNull(tunnelInterface).getFileDescriptor());
         tunnelPacketWriter = new ClientPacketWriter(tunnelWriteStream);
@@ -61,7 +64,7 @@ public class TunnelRunnable implements Runnable {
         nioService = new SocketNIODataService(tunnelPacketWriter);
         dataServiceThread = new Thread(nioService, "Socket NIO thread");
         manager = new SessionManager();
-        handler = new SessionHandler(manager, nioService, tunnelPacketWriter);
+        handler = new SessionHandler(manager, nioService, tunnelPacketWriter, peers);
     }
 
     // Allocate the buffer for a single packet.

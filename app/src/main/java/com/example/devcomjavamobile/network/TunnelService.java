@@ -74,13 +74,29 @@ public class TunnelService extends VpnService implements IProtectSocket {
         currentService = this;
         Log.i(TAG, "Model: " + Build.MANUFACTURER);
         Log.i(TAG, "Model: " + Build.MODEL);
-        Log.i(TAG, "");
-        peers = new LinkedList<>();
-        RoutingTable peerOne = new RoutingTable();
-        peerOne.addCommunity("omms");
-        peerOne.addPhysicalAddress("10.0.2.17");
-        peerOne.setFingerPrint("FINGERPRINT");
-        peers.add(peerOne);
+        Log.i(TAG, "Fingerprint: " + Build.FINGERPRINT); // "google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"
+
+        if(Build.FINGERPRINT.equals("google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys")) // Pixel 2 ip 10.0.2.16
+        {
+            Log.d(TAG, "This should be the pixel 2 emulator");
+            peers = new LinkedList<>();
+            RoutingTable peerOne = new RoutingTable();
+            peerOne.addCommunity("omms");
+            peerOne.addPhysicalAddress("10.0.2.17");
+            peerOne.setFingerPrint("a933:2cb3:b5cf:e60c");
+            peers.add(peerOne);
+        }
+        else //Pixel 2 XL ip 10.0.2.17 Fingerprint: "google/sdk_gphone_x86_arm/generic_x86_arm:11/RSR1.201013.001/6903271:userdebug/dev-keys"
+        {
+            Log.d(TAG, "This should be the pixel 2 XL emulator");
+            peers = new LinkedList<>();
+            RoutingTable peerOne = new RoutingTable();
+            peerOne.addCommunity("omms");
+            peerOne.addPhysicalAddress("10.0.2.16");
+            peerOne.setFingerPrint("c775:f615:9c29:fe06");
+            peers.add(peerOne);
+        }
+        Log.i(TAG, peers.getFirst().toString());
     }
 
     @Override
@@ -160,7 +176,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         try {
             Log.d(TAG, "Starting tunnelRunnable");
-            tunnelRunnable = new TunnelRunnable(tunnelInterface);
+            tunnelRunnable = new TunnelRunnable(tunnelInterface, peers);
         } catch(IOException e) {
             Log.w("IOException", e);
         }

@@ -45,9 +45,10 @@
         android:ems="10"
         android:hint="Enter IP"
         android:inputType="textPersonName"
-        android:text="fe80:646d:6d73:0000:c775:f615:9c29:fe06"
+        android:text="fe80:6661:6d69:6c79:a933:2cb3:b5cf:e60c"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.50"
+
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

@@ -4,7 +4,6 @@ package com.example.devcomjavamobile.network.vpn.transport;
 import android.os.ParcelFileDescriptor;
 
 import java.util.LinkedList;
-import java.util.List;
 
 public class RoutingTable {
 
@@ -38,7 +37,7 @@ public class RoutingTable {
 
     public void addPhysicalAddress(String physicalAddress) {
         physicalAddresses.addFirst(physicalAddress);
-        if(!(physicalAddresses.indexOf(physicalAddresses.peekLast()) >= MAX_ADDRESSES))
+        if((physicalAddresses.indexOf(physicalAddresses.peekLast()) >= MAX_ADDRESSES))
         {
             physicalAddresses.removeLast();
         }
@@ -59,4 +58,27 @@ public class RoutingTable {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        str.append("\nPeers:\n");
+        str.append("Fingerprint: " +  getFingerPrint() + "\n");
+        str.append("Physical addresses: \n");
+        int i = 0;
+        for(String b : getPhysicalAddresses())
+        {
+            i++;
+            str.append(i + ". " + b + "\n");
+        }
+        str.append("Communities: \n");
+        i = 0;
+        for(String b : getCommunities())
+        {
+            i++;
+            str.append(i + ". " + b + "\n");
+        }
+        return str.toString();
+    }
+
 }
