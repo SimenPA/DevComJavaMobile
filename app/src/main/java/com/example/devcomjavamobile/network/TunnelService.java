@@ -76,23 +76,25 @@ public class TunnelService extends VpnService implements IProtectSocket {
         Log.i(TAG, "Model: " + Build.MODEL);
         Log.i(TAG, "Fingerprint: " + Build.FINGERPRINT); // "google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"
 
-        if(Build.FINGERPRINT.equals("google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys")) // Pixel 2 ip 10.0.2.16
+        if(Build.FINGERPRINT.equals("google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"))
         {
+            // Adding Samsung s8 peer
             Log.d(TAG, "This should be the pixel 2 emulator");
             peers = new LinkedList<>();
             RoutingTable peerOne = new RoutingTable();
             peerOne.addCommunity("omms");
-            peerOne.addPhysicalAddress("10.0.2.17");
+            peerOne.addPhysicalAddress("193.157.192.58"); // Samsung s8 external IP
             peerOne.setFingerPrint("a933:2cb3:b5cf:e60c");
             peers.add(peerOne);
         }
-        else //Pixel 2 XL ip 10.0.2.17 Fingerprint: "google/sdk_gphone_x86_arm/generic_x86_arm:11/RSR1.201013.001/6903271:userdebug/dev-keys"
+        else
         {
-            Log.d(TAG, "This should be the pixel 2 XL emulator");
+            // Adding Pixel emulator peer
+            Log.d(TAG, "This should be any other devie");
             peers = new LinkedList<>();
             RoutingTable peerOne = new RoutingTable();
             peerOne.addCommunity("omms");
-            peerOne.addPhysicalAddress("10.0.2.16");
+            peerOne.addPhysicalAddress("193.157.238.175"); // Macbook Pro/Pixel emulator external IP
             peerOne.setFingerPrint("c775:f615:9c29:fe06");
             peers.add(peerOne);
         }
@@ -152,8 +154,8 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         if(this.tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
-                .addAddress("fe80:6661:6d69:6c79:c775:f615:9c29:fe06", 64) // fe80 prefix, community "family", fingerprint
-                //.addAddress("169.254.61.42", 32)
+                .addAddress("fe80:0000:0000:0000:c775:f615:9c29:fe06", 128) // fe80 prefix, no community , fingerprint
+                //.addAddress("169.254.61.42", 32) // random link-local IPv4 address
                 .allowFamily(AF_INET6)
                 .allowFamily(AF_INET)
                 .addRoute("0.0.0.0", 0) // All IPv4 addresses

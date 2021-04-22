@@ -9,9 +9,14 @@ import com.example.devcomjavamobile.MainActivity;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.NetworkInterface;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -70,7 +75,12 @@ public class UDPServer implements Runnable {
         try {
             String message;
             byte[] lmessage = new byte[100];
-            ds =  new DatagramSocket(9700);
+            //InetAddress serverAddress = Inet4Address.getByName(getIpAddress());
+            ds =  new DatagramSocket(1337);
+            //SocketAddress addr = new InetSocketAddress(1337);
+            //ds.setReuseAddress(true);
+            //ds.bind(addr);
+            ds.setReuseAddress(true);
             packet = new DatagramPacket(lmessage, lmessage.length);
             activity.runOnUiThread(new Runnable() {
                 public void run() {
@@ -103,4 +113,38 @@ public class UDPServer implements Runnable {
         }
 
     }
+    //
+    // Imported from http://android-er.blogspot.com/2016/06/android-datagramudp-server-example.html
+    //
+    private String getIpAddress() {
+        String ip = "";
+        try {
+            Enumeration<NetworkInterface> enumNetworkInterfaces = NetworkInterface
+                    .getNetworkInterfaces();
+            while (enumNetworkInterfaces.hasMoreElements()) {
+                NetworkInterface networkInterface = enumNetworkInterfaces
+                        .nextElement();
+                Enumeration<InetAddress> enumInetAddress = networkInterface
+                        .getInetAddresses();
+                while (enumInetAddress.hasMoreElements()) {
+                    InetAddress inetAddress = enumInetAddress.nextElement();
+
+                    if (inetAddress.isSiteLocalAddress()) {
+                        ip += "SiteLocalAddress: "
+                                + inetAddress.getHostAddress() + "\n";
+                    }
+
+                }
+
+            }
+
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+            ip += "Something Wrong! " + e.toString() + "\n";
+        }
+
+        return ip;
+    }
+
 }

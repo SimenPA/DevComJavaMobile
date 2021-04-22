@@ -48,6 +48,8 @@ import com.example.devcomjavamobile.network.vpn.util.PacketUtil;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import static java.net.InetAddress.*;
+
 
 /**
  * handle VPN client request and response. it create a new session for each VPN client.
@@ -173,16 +175,17 @@ public class SessionHandler {
                     SocketProtector protector = SocketProtector.getInstance();
                     protector.protect(channel.socket());
                     */
-                    InetAddress serverAddress = InetAddress.getByName(b.getPhysicalAddresses().getFirst());
+
                     DatagramSocket socket = new DatagramSocket();
+                    InetAddress serverAddress = getByName(b.getPhysicalAddresses().getFirst());
                     // SocketProtector protector = new SocketProtector();
                     // protector.protect(socket);
                     if (!socket.getBroadcast()) socket.setBroadcast(true);
                     byte[] buf = new byte[clientPacketData.remaining()];
                     clientPacketData.get(buf);
                     DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                            serverAddress, 9700);
-                    Log.i(TAG, "Trying to forward message to :" + b.getFingerPrint());
+                            serverAddress, 1337);
+                    Log.i(TAG, "Trying to forward message to " + b.getFingerPrint() + " which has the IPv4 address " + serverAddress.toString());
                     socket.send(packet);
                     socket.close();
 
@@ -569,7 +572,7 @@ public class SessionHandler {
 
             private boolean isReachable(String ipAddress) {
                 try {
-                    return InetAddress.getByName(ipAddress).isReachable(10000);
+                    return getByName(ipAddress).isReachable(10000);
                 } catch (IOException e) {
                     return false;
                 }
