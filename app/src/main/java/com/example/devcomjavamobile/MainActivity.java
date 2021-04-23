@@ -21,6 +21,10 @@ public class MainActivity extends AppCompatActivity {
 
     final static int START_TUNNEL =  123;
 
+    static {
+        System.loadLibrary("native-lib");
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,6 +38,9 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
+        String fromC = stringFromJNI();
+        Log.i("MainActivity","Got the following string from C++: " + fromC );
+        generateKeys();
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -65,5 +72,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public native String stringFromJNI();
+
+    public native void generateKeys();
 
 }
