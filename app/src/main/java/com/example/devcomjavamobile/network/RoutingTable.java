@@ -1,8 +1,9 @@
-package com.example.devcomjavamobile.network.vpn.transport;
+package com.example.devcomjavamobile.network;
 
 
 import android.os.ParcelFileDescriptor;
 
+import java.net.Socket;
 import java.util.LinkedList;
 
 public class RoutingTable {
@@ -15,8 +16,9 @@ public class RoutingTable {
     LinkedList<String> physicalAddresses;
     LinkedList<String> communities;
     String password;
-    ParcelFileDescriptor fd_control; // File descriptor of the TCP control channel associated with this device
+    Socket controlSocket; // Socket of the TCP control channel associated with this device
     String key_pair; // Temporary variable, will find better later on
+    int udp;
 
     public RoutingTable() {
         physicalAddresses = new LinkedList<>();
@@ -58,6 +60,14 @@ public class RoutingTable {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public void setControlSocket(Socket controlSocket) { this.controlSocket =  controlSocket; }
+
+    public Socket getControlSocket() { return controlSocket; }
+
+    public int getUdp() { return udp; }
+
+    public void setUdp(int udp) { this.udp = udp; }
 
     @Override
     public String toString() {

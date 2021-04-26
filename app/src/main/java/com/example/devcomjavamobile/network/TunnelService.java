@@ -13,25 +13,18 @@ package com.example.devcomjavamobile.network;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.devcomjavamobile.MainActivity;
-import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
 import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
-import com.example.devcomjavamobile.network.vpn.transport.RoutingTable;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static android.system.OsConstants.AF_INET;
 import static android.system.OsConstants.AF_INET6;
@@ -46,6 +39,9 @@ public class TunnelService extends VpnService implements IProtectSocket {
     public static final String START_TUNNEL = "com.example.devcomjavamobile.START";
     public static final String STOP_TUNNEL = "com.example.devcomjavamobile.STOP";
 
+    private String fingerPrint;
+    private String tunnelAddress;
+
     private ParcelFileDescriptor tunnelInterface;
     private TunnelRunnable tunnelRunnable;
     private Thread tunnelRunnableThread;
@@ -55,6 +51,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
     private PendingIntent mConfigureIntent;
 
     public LinkedList<RoutingTable> peers;
+
 
 
 
@@ -72,10 +69,9 @@ public class TunnelService extends VpnService implements IProtectSocket {
         // PendingIntent.FLAG_UPDATE_CURRENT);
         // getFilesDir(); // get key pair file
         currentService = this;
-        Log.i(TAG, "Model: " + Build.MANUFACTURER);
-        Log.i(TAG, "Model: " + Build.MODEL);
-        Log.i(TAG, "Fingerprint: " + Build.FINGERPRINT); // "google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"
 
+        fingerPrint = createFingerprint();
+        tunnelAddress = createTunnelAddress();
         if(Build.FINGERPRINT.equals("google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"))
         {
             // Adding Samsung s8 peer
@@ -154,8 +150,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         if(this.tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
-                .addAddress("fe80:0000:0000:0000:c775:f615:9c29:fe06", 128) // fe80 prefix, no community , fingerprint
-                //.addAddress("169.254.61.42", 32) // random link-local IPv4 address
+                .addAddress(tunnelAddress, 128)
                 .allowFamily(AF_INET6)
                 .allowFamily(AF_INET)
                 .addRoute("0.0.0.0", 0) // All IPv4 addresses
@@ -189,6 +184,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
         tunnelRunnableThread.start();
 
         Toast.makeText(this, "Tunnel Service has started", Toast.LENGTH_SHORT).show();
+
         return true;
     }
 
@@ -240,5 +236,21 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
     private boolean isActive() {
         return this.tunnelInterface != null;
+    }
+
+    private native String createFingerprint();
+
+    private String createTunnelAddress()
+    {
+        StringBuilder str = new StringBuilder();
+        str.append("fe80:0000:0000:0000:");
+        str.append(fingerPrint.substring(0, 3).toLowerCase());
+        str.append(":");
+        str.append(fingerPrint.substring(4, 7).toLowerCase());
+        str.append(":");
+        str.append(fingerPrint.substring(8, 11).toLowerCase());
+        str.append(":");
+        str.append(fingerPrint.substring(12, 15).toLowerCase());
+        return str.toString();
     }
 }

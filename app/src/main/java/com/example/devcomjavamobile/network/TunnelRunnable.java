@@ -11,21 +11,17 @@
 
 package com.example.devcomjavamobile.network;
 
-import android.app.Activity;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
-import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.SessionHandler;
 import com.example.devcomjavamobile.network.vpn.SessionManager;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
-import com.example.devcomjavamobile.network.vpn.transport.RoutingTable;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.Objects;

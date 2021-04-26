@@ -21,7 +21,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
@@ -29,9 +28,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
-import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
-import com.example.devcomjavamobile.network.vpn.transport.RoutingTable;
+import com.example.devcomjavamobile.network.RoutingTable;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;

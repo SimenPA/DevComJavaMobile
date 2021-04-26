@@ -18,7 +18,7 @@ void generate_key_pair() {
         if (!PEM_read_RSAPrivateKey(fp, &key_pair, NULL, NULL)) {
             //fprintf(stderr, "Error loading RSA Private Key File.\n");
             __android_log_print(ANDROID_LOG_DEBUG, "DevComJavaMobile_SECURITY_C", "Error loading RSA Private key file\n" );
-            exit(EXIT_FAILURE);
+            return;
         }
 
         fclose(fp);
@@ -53,7 +53,7 @@ void generate_key_pair() {
     if(!fp){
         __android_log_print(ANDROID_LOG_VERBOSE, "DevComJavaMobile_SECURITY_C", "Error opening PEM file %s\n", file_pem );
         // fprintf(stderr, "Error opening PEM file %s\n", file_pem);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     // Blank passphrase
@@ -62,7 +62,7 @@ void generate_key_pair() {
         //if(!PEM_write_RSAPrivateKey(fp, key_pair, EVP_des_ede3_cbc(), (unsigned char *) passphrase, 0, NULL, NULL)) {
         __android_log_print(ANDROID_LOG_VERBOSE, "DevComJavaMobile_SECURITY_C", "Error writing PEM file %s\n", file_pem );
         //fprintf(stderr, "Error writing PEM file %s\n", file_pem);
-        exit(EXIT_FAILURE);
+        return;
     }
     fclose(fp);
 
@@ -71,13 +71,13 @@ void generate_key_pair() {
     if(!fp) {
         __android_log_print(ANDROID_LOG_VERBOSE, "DevComJavaMobile_SECURITY_C", "Error opening PEM file %s\n", file_pem_pub );
         // fprintf(stderr, "Error opening PEM file %s\n", file_pem_pub);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     if(!PEM_write_RSAPublicKey(fp, key_pair)){
         __android_log_print(ANDROID_LOG_VERBOSE, "DevComJavaMobile_SECURITY_C", "Error writing PEM file %s\n", file_pem_pub );
         // fprintf(stderr, "Error writing PEM file %s\n", file_pem_pub);
-        exit(EXIT_FAILURE);
+        return;
     }
 
     fclose(fp);
@@ -85,8 +85,12 @@ void generate_key_pair() {
     if(!EVP_PKEY_assign_RSA(private_key, key_pair)) {
         __android_log_print(ANDROID_LOG_VERBOSE, "DevComJavaMobile_SECURITY_C", "EVP_PKEY_assign_RSA: failed.\n");
         // fprintf(stderr, "EVP_PKEY_assign_RSA: failed.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
+}
+
+char* create_fingerprint_forcpp() {
+  return create_fingerprint(PUBLIC_KEY);
 }
 
 char* create_fingerprint(char *public_key_file) {

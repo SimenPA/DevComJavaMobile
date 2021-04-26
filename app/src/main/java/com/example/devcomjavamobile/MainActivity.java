@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 
+import com.example.devcomjavamobile.network.TunnelRunnable;
 import com.example.devcomjavamobile.network.TunnelService;
 import com.example.devcomjavamobile.ui.home.HomeFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -20,6 +21,7 @@ import androidx.navigation.ui.NavigationUI;
 public class MainActivity extends AppCompatActivity {
 
     final static int START_TUNNEL =  123;
+    final static String TAG = MainActivity.class.getSimpleName();
 
     static {
         System.loadLibrary("native-lib");

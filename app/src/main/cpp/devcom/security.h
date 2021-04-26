@@ -22,6 +22,7 @@ EVP_PKEY *private_key;
 void generate_key_pair();
 
 char* generate_ip(char *community, char *file_pem);
+char* create_fingerprint_forcpp();
 char* create_fingerprint(char *public_key_file);
 
 void generate_password(unsigned char* password, int length);
