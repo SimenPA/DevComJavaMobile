@@ -15,7 +15,7 @@ public class P2P {
     private final static String TAG = P2P.class.getSimpleName();
 
     LinkedList<RoutingTable> peers;
-    String myFingerPrint
+    String myFingerPrint;
 
     public P2P(LinkedList<RoutingTable> peers, String myFingerPrint)
     {
@@ -32,7 +32,7 @@ public class P2P {
         Socket controlSocket = ct.connectTCPControlServer(physicalAddress);
         pHandler.addControlSocket(fingerPrint, controlSocket);
 
-
+        // sendControlJoin(controlSocket, community, fingerPrint);
     }
 
     public void sendControlJoin(Socket controlSocket, String commmunity, String fingerPrint)
@@ -42,15 +42,18 @@ public class P2P {
 
         peer.setUdp(0);
         // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
-        byte[] controlPacket = new byte[2071];
+        char[] controlPacket = new char[2071];
         newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
 
         char[] payload = new char[PASSWORD_LENGTH];
         generatePassword(payload, PASSWORD_LENGTH);
         Log.d(TAG, "Session key: " + payload.toString());
         // TODO: This is where I left off after 26.4. Method is send_control_join in control_traffic.c
-        //addSessionKey()
+        // addSessionKey()
 
+        // aes_init(password, password length, password, encrypt_ctx, decrypt_ctx)
+
+        char[] encryptedPacket =  control_packet_encrypt(controlPacket, payload, peer.getPublicKeyFilePath());
 
     }
 
@@ -59,7 +62,7 @@ public class P2P {
 
     }
 
-    public void newControlPacket(byte[] controlPacket, char type, String community, String fingerPrint)
+    public void newControlPacket(char[] controlPacket, char type, String community, String fingerPrint)
     {
 
     }
@@ -75,4 +78,6 @@ public class P2P {
             password[i] = c;
         }
     }
+
+    public native char[] control_packet_encrypt(char[] packet, char[] payload, String key_pair);
 }

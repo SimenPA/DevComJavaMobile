@@ -8,33 +8,29 @@ public class PeersHandler {
 
     LinkedList<RoutingTable> peers;
 
-
     public PeersHandler(LinkedList<RoutingTable> peers)
     {
         this.peers = peers;
     }
 
-    public LinkedList<RoutingTable> createPeersTable()
-    {
-        return new LinkedList<>();
-    }
-
     public RoutingTable addPhysicalAddress(String fingerPrint, String physicalAddress)
     {
+
         boolean fingerPrintExists = false;
-        for(RoutingTable p : peers)
+        for(RoutingTable peer : peers)
         {
-            if(p.getFingerPrint().equals(fingerPrint))
+            if(peer.getFingerPrint().equals(fingerPrint))
             {
-                p.addPhysicalAddress(physicalAddress);
-                fingerPrintExists = true;
+                peer.addPhysicalAddress(physicalAddress);
+                return peer;
             }
+
         }
-        if(!fingerPrintExists)
-        {
-            RoutingTable peer = addFingerPrint(fingerPrint);
-            peer.addPhysicalAddress(physicalAddress);
-        }
+
+        // Only gets here if fingerprint doesn't exist
+        RoutingTable peer = addFingerPrint(fingerPrint);
+        peer.addPhysicalAddress(physicalAddress);
+        return peer;
     }
 
     public RoutingTable addFingerPrint(String fingerPrint)

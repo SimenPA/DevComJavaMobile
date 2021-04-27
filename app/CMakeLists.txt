@@ -28,6 +28,7 @@ add_library(
         devcom
         SHARED
         src/main/cpp/devcom/security.c
+        src/main/cpp/devcom/control_traffic.c
 )
 
 add_library(
@@ -39,6 +40,7 @@ add_library(
         crypto STATIC IMPORTED
 )
 set_target_properties(crypto PROPERTIES IMPORTED_LOCATION ${PROJECT_SOURCE_DIR}/../${OPENSSL_DIR}/${ANDROID_ABI}/lib/libcrypto.a)
+
 
 include_directories(libs/${ANDROID_ABI}/include)
 

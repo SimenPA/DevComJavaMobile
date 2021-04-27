@@ -64,7 +64,7 @@
         app:layout_constraintTop_toBottomOf="@+id/stopServerBtn" />
 
     <EditText
-        android:id="@+id/enterMsgEditText"
+        android:id="@+id/enterComEditText"
         android:layout_width="350dp"
         android:layout_height="44dp"
         android:layout_marginTop="10dp"
@@ -85,6 +85,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/enterMsgEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/enterComEditText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

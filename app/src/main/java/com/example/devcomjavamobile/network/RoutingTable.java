@@ -17,7 +17,10 @@ public class RoutingTable {
     LinkedList<String> communities;
     String password;
     Socket controlSocket; // Socket of the TCP control channel associated with this device
-    String key_pair; // Temporary variable, will find better later on
+
+
+
+    String publicKeyFilePath; // Temporary variable, will find better later on
     int udp;
 
     public RoutingTable() {
@@ -68,6 +71,14 @@ public class RoutingTable {
     public int getUdp() { return udp; }
 
     public void setUdp(int udp) { this.udp = udp; }
+
+    public String getPublicKeyFilePath() {
+        return publicKeyFilePath;
+    }
+
+    public void setPublicKeyFilePath(String publicKeyFilePath) {
+        this.publicKeyFilePath = publicKeyFilePath;
+    }
 
     @Override
     public String toString() {

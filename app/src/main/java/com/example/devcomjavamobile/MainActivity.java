@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 
+import com.example.devcomjavamobile.network.PeersHandler;
+import com.example.devcomjavamobile.network.RoutingTable;
 import com.example.devcomjavamobile.network.TunnelRunnable;
 import com.example.devcomjavamobile.network.TunnelService;
 import com.example.devcomjavamobile.ui.home.HomeFragment;
@@ -18,10 +20,14 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import java.util.LinkedList;
+
 public class MainActivity extends AppCompatActivity {
 
     final static int START_TUNNEL =  123;
     final static String TAG = MainActivity.class.getSimpleName();
+
+    LinkedList<RoutingTable> peers;
 
     static {
         System.loadLibrary("native-lib");
@@ -43,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
         String fromC = stringFromJNI();
         Log.i("MainActivity","Got the following string from C++: " + fromC );
         generateKeys();
+
+        peers = new LinkedList<>();
+
+
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
@@ -74,8 +84,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public LinkedList<RoutingTable> getPeers() { return peers; }
+
     public native String stringFromJNI();
 
     public native void generateKeys();
+
+    public native String createFingerprint();
 
 }
