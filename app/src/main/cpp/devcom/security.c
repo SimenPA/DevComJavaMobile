@@ -94,23 +94,30 @@ char* create_fingerprint_forcpp() {
 }
 
 char* create_fingerprint(char *public_key_file) {
-    char fingerprint[17] = {'\0'};
-    FILE *fp;
-    RSA *rsa;
+  char fingerprint[17] = {'\0'};
+  FILE *fp;
+  RSA *rsa;
 
-    fp = fopen(public_key_file, "r");
-    rsa = PEM_read_RSAPublicKey(fp, NULL, NULL, NULL);
-    fclose(fp);
+  fp = fopen(public_key_file, "r");
+  rsa = PEM_read_RSAPublicKey(fp, NULL, NULL, NULL);
+  fclose(fp);
 
-    char *tmp = BN_bn2hex(rsa->n);
+  // Old code:
+  //char *tmp = BN_bn2hex(rsa->n);
 
-    //TODO: FIXME This is a stupid way of using the same algo. as in generate_ip but skipping the separating colons (FFFF:BBBB)
-    memcpy(fingerprint, tmp, 4);
-    memcpy(fingerprint + 4, tmp + 5, 4);
-    memcpy(fingerprint + 8, tmp + 10, 4);
-    memcpy(fingerprint + 12, tmp + 15, 4);
+  // Replaced by Simen 14.01.21 due to OPENSSL changes:
+  const BIGNUM *n;
+  RSA_get0_key(rsa, &n, NULL, NULL);
+  char *tmp = BN_bn2hex(n);
 
-    return strdup(fingerprint);
+
+  //TODO: FIXME This is a stupid way of using the same algo. as in generate_ip but skipping the separating colons (FFFF:BBBB)
+  memcpy(fingerprint, tmp, 4);
+  memcpy(fingerprint + 4, tmp + 5, 4);
+  memcpy(fingerprint + 8, tmp + 10, 4);
+  memcpy(fingerprint + 12, tmp + 15, 4);
+
+  return strdup(fingerprint);
 }
 
 char* generate_ip(char *community, char *file_pem) {
@@ -165,7 +172,13 @@ char* generate_ip(char *community, char *file_pem) {
     rsa = PEM_read_RSAPublicKey(fp, NULL, NULL, NULL);
     fclose(fp);
 
-    char *tmp = BN_bn2hex(rsa->n);
+    // Old code:
+    //char *tmp = BN_bn2hex(rsa->n);
+
+    // Replaced by Simen due to OPENSSL changes 14.01.21:
+    const BIGNUM *n;
+    RSA_get0_key(rsa, &n, NULL, NULL);
+    char *tmp = BN_bn2hex(n);
     memcpy(ip + 20, tmp, 19);
 
     // Replace certain bytes for :
