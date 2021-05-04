@@ -28,7 +28,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.example.devcomjavamobile.network.RoutingTable;
+import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
@@ -68,9 +68,9 @@ public class SessionHandler {
 
     private final ExecutorService pingThreadpool;
 
-    private LinkedList<RoutingTable> peers;
+    private LinkedList<Peer> peers;
 
-    public SessionHandler(SessionManager manager, SocketNIODataService nioService, ClientPacketWriter writer, LinkedList<RoutingTable> peers) {
+    public SessionHandler(SessionManager manager, SocketNIODataService nioService, ClientPacketWriter writer, LinkedList<Peer> peers) {
         this.manager = manager;
         this.nioService = nioService;
         this.writer = writer;
@@ -159,7 +159,7 @@ public class SessionHandler {
             Log.d(TAG, "This IPv6 package is link-local(fe80)");
             String fingerPrint = destinationIP.substring(20, 39);
             boolean deviceFound = false;
-            for(RoutingTable b : peers) {
+            for(Peer b : peers) {
                 if (b.getFingerPrint().equals(fingerPrint)) {
                     deviceFound = true;
                     Log.d(TAG, "Device found, trying to send");

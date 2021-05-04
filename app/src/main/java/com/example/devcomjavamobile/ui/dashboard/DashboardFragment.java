@@ -6,29 +6,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
-import com.example.devcomjavamobile.network.ControlTraffic;
 import com.example.devcomjavamobile.network.P2P;
-import com.example.devcomjavamobile.network.RoutingTable;
+import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.TCPServer;
-import com.example.devcomjavamobile.network.UDPSender;
-import com.example.devcomjavamobile.network.UDPServer;
-import com.example.devcomjavamobile.ui.home.HomeFragment;
-import com.example.devcomjavamobile.ui.home.HomeViewModel;
 
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 public class DashboardFragment extends Fragment {
 
@@ -50,9 +40,9 @@ public class DashboardFragment extends Fragment {
         fingerPrintText = (EditText)root.findViewById(R.id.enterFingerPrintEditText);
         addressText = (EditText)root.findViewById(R.id.enterAddressEditText);
 
-        Button connectBtn = (Button) root.findViewById(R.id.connectBtn);
-        connectBtn.setOnClickListener(view -> {
-            LinkedList<RoutingTable> peers = ((MainActivity)getActivity()).getPeers();
+        Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
+        joinComBtn.setOnClickListener(view -> {
+            LinkedList<Peer> peers = ((MainActivity)getActivity()).getPeers();
             P2P p2p = new P2P(peers, ((MainActivity)getActivity()).createFingerprint());
             try {
                 p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());

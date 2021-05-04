@@ -215,7 +215,7 @@ int aes_init(unsigned char* key_data, int key_data_len, unsigned char* salt, EVP
   __android_log_print(ANDROID_LOG_VERBOSE, "DevComJavaMobile_SECURITY_C", "Initialized AES session key...\n" );
   //if(verbose) { fprintf(stdout, "Initialized AES session key...\n"); }
 
-    return 0;
+  return 0;
 }
 
 unsigned char* aes_encrypt(EVP_CIPHER_CTX* e, unsigned char* plaintext, int* len) {

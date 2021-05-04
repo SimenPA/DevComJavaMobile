@@ -52,7 +52,7 @@ public class TunnelRunnable implements Runnable {
     private SessionHandler handler;
 
 
-    public TunnelRunnable(ParcelFileDescriptor tunnelInterface, LinkedList<RoutingTable> peers) throws IOException {
+    public TunnelRunnable(ParcelFileDescriptor tunnelInterface, LinkedList<Peer> peers) throws IOException {
         tunnelWriteStream = new FileOutputStream(Objects.requireNonNull(tunnelInterface).getFileDescriptor());
         tunnelReadStream =  new FileInputStream(Objects.requireNonNull(tunnelInterface).getFileDescriptor());
         tunnelPacketWriter = new ClientPacketWriter(tunnelWriteStream);

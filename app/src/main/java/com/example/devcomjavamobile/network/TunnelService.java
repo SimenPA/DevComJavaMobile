@@ -50,7 +50,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
     private PendingIntent mConfigureIntent;
 
-    public LinkedList<RoutingTable> peers;
+    public LinkedList<Peer> peers;
 
 
 
@@ -77,7 +77,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
             // Adding Samsung s8 peer
             Log.d(TAG, "This should be the pixel 2 emulator");
             peers = new LinkedList<>();
-            RoutingTable peerOne = new RoutingTable();
+            Peer peerOne = new Peer();
             peerOne.addCommunity("omms");
             peerOne.addPhysicalAddress("193.157.192.58"); // Samsung s8 external IP
             peerOne.setFingerPrint("a933:2cb3:b5cf:e60c");
@@ -88,7 +88,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
             // Adding Pixel emulator peer
             Log.d(TAG, "This should be any other devie");
             peers = new LinkedList<>();
-            RoutingTable peerOne = new RoutingTable();
+            Peer peerOne = new Peer();
             peerOne.addCommunity("omms");
             peerOne.addPhysicalAddress("193.157.238.175"); // Macbook Pro/Pixel emulator external IP
             peerOne.setFingerPrint("c775:f615:9c29:fe06");

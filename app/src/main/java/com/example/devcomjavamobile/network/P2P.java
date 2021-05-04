@@ -1,6 +1,5 @@
 package com.example.devcomjavamobile.network;
 
-import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import java.io.IOException;
@@ -8,16 +7,16 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.example.devcomjavamobile.network.RoutingTable.PASSWORD_LENGTH;
+import static com.example.devcomjavamobile.network.Peer.PASSWORD_LENGTH;
 
 public class P2P {
 
     private final static String TAG = P2P.class.getSimpleName();
 
-    LinkedList<RoutingTable> peers;
+    LinkedList<Peer> peers;
     String myFingerPrint;
 
-    public P2P(LinkedList<RoutingTable> peers, String myFingerPrint)
+    public P2P(LinkedList<Peer> peers, String myFingerPrint)
     {
         this.peers = peers;
         this.myFingerPrint =  myFingerPrint;
@@ -27,10 +26,12 @@ public class P2P {
         pHandler.addFingerPrint(fingerPrint);
         pHandler.addPhysicalAddress(fingerPrint, physicalAddress);
 
+        Log.d(TAG, "PeersHandler has added community, supposedly");
+
         //TODO: save cache file method
-        ControlTraffic ct = new ControlTraffic(peers);
-        Socket controlSocket = ct.connectTCPControlServer(physicalAddress);
-        pHandler.addControlSocket(fingerPrint, controlSocket);
+        ControlTraffic controlTraffic = new ControlTraffic(peers, physicalAddress);
+        controlTraffic.start();
+        pHandler.addControlTraffic(fingerPrint, controlTraffic);
 
         // sendControlJoin(controlSocket, community, fingerPrint);
     }
@@ -38,7 +39,7 @@ public class P2P {
     public void sendControlJoin(Socket controlSocket, String commmunity, String fingerPrint)
     {
         PeersHandler pHandler =  new PeersHandler(peers);
-        RoutingTable peer = pHandler.getPeer(fingerPrint);
+        Peer peer = pHandler.getPeer(fingerPrint);
 
         peer.setUdp(0);
         // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet

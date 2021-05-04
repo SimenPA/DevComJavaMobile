@@ -46,13 +46,13 @@
         app:layout_constraintTop_toBottomOf="@+id/enterFingerPrintEditText" />
 
     <Button
-        android:id="@+id/connectBtn"
+        android:id="@+id/joinComBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="161dp"
         android:layout_marginTop="50dp"
         android:layout_marginEnd="161dp"
-        android:text="Connect"
+        android:text="Join Community"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/enterAddressEditText" />
@@ -65,7 +65,7 @@
         android:text="Start TCP server"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/connectBtn" />
+        app:layout_constraintTop_toBottomOf="@+id/joinComBtn" />
 
     <Button
         android:id="@+id/stopTCPButton"

@@ -8,6 +8,7 @@ import android.widget.Toast;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.ServerSocket;
@@ -23,10 +24,13 @@ public class TCPServer implements Runnable {
 
     private final static String TAG = TCPServer.class.getSimpleName();
 
+    private final static int PORT_CONTROL = 7800;
+
     ServerSocket ss;
     Socket mySocket;
     String msg;
-    DataInputStream dis;
+    InputStreamReader isr;
+    BufferedReader br;
 
     Activity activity;
 
@@ -42,11 +46,13 @@ public class TCPServer implements Runnable {
     @Override
     public void run() {
 
+        String message = "";
         running.set(true);
         stopped.set(false);
         try
         {
-            ss =  new ServerSocket(9700);
+            ss =  new ServerSocket(PORT_CONTROL);
+            ss.setReuseAddress(true);
             activity.runOnUiThread(new Runnable() {
                 public void run() {
                     Toast.makeText(activity, "Server has started", Toast.LENGTH_SHORT).show();
@@ -55,18 +61,20 @@ public class TCPServer implements Runnable {
             while (true)
             {
                 mySocket = ss.accept();
-                dis =  new DataInputStream(mySocket.getInputStream());
                 Log.d(TAG, "Got an incoming connection");
 
-                /*
+                mySocket = ss.accept();
+                isr =  new InputStreamReader(mySocket.getInputStream());
+                br = new BufferedReader(isr);
 
-                msg = dis.readUTF();
+                message = br.readLine();
+
+                String finalMessage = message;
                 activity.runOnUiThread(new Runnable() {
                     public void run() {
-                        Toast.makeText(activity, "Message received from client: " + msg, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show();
                     }
                 });
-                 */
 
             }
         }
@@ -78,6 +86,7 @@ public class TCPServer implements Runnable {
     }
 
     public void start() {
+        Log.d(TAG, "TCP Server has started");
         worker = new Thread(this);
         worker.start();
     }
@@ -89,7 +98,7 @@ public class TCPServer implements Runnable {
             stopped.set(true);
             ss.close();
             Toast.makeText(activity, "TCP Server has stopped", Toast.LENGTH_SHORT).show();
-            Log.i("UDPServer", "TCP Server has stopped");
+            Log.d(TAG, "TCP Server has stopped");
             worker.interrupt();
         }
         else {

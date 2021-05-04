@@ -1,29 +1,31 @@
 package com.example.devcomjavamobile.network;
 
 
+import android.icu.number.CompactNotation;
 import android.os.ParcelFileDescriptor;
+import android.service.controls.Control;
 
 import java.net.Socket;
 import java.util.LinkedList;
-
-public class RoutingTable {
+// Also known as routing_table in DevCom.c, but I(Simen Persch Andersen) prefer this name
+public class Peer {
 
     static final int MAX_ADDRESSES = 5;
     static final int MAX_COMMUNITIES = 5;
     static final int PASSWORD_LENGTH = 32; // 8 bits * 32 chars = 256 bit keys
 
-    String fingerPrint;
+    String fingerPrint = "";
     LinkedList<String> physicalAddresses;
     LinkedList<String> communities;
-    String password;
-    Socket controlSocket; // Socket of the TCP control channel associated with this device
+    String password = "";
+    ControlTraffic controlTraffic = null; // Socket of the TCP control channel associated with this device
 
 
 
     String publicKeyFilePath; // Temporary variable, will find better later on
     int udp;
 
-    public RoutingTable() {
+    public Peer() {
         physicalAddresses = new LinkedList<>();
         communities = new LinkedList<>();
     }
@@ -64,9 +66,9 @@ public class RoutingTable {
         this.password = password;
     }
 
-    public void setControlSocket(Socket controlSocket) { this.controlSocket =  controlSocket; }
+    public void setControlTraffic(ControlTraffic controlTraffic) { this.controlTraffic =  controlTraffic; }
 
-    public Socket getControlSocket() { return controlSocket; }
+    public ControlTraffic getControlTraffic() { return controlTraffic; }
 
     public int getUdp() { return udp; }
 

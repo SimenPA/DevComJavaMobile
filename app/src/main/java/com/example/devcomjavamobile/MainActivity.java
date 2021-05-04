@@ -4,17 +4,12 @@ import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Button;
 
-import com.example.devcomjavamobile.network.PeersHandler;
-import com.example.devcomjavamobile.network.RoutingTable;
-import com.example.devcomjavamobile.network.TunnelRunnable;
+import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.TunnelService;
-import com.example.devcomjavamobile.ui.home.HomeFragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentManager;
 import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
@@ -27,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     final static int START_TUNNEL =  123;
     final static String TAG = MainActivity.class.getSimpleName();
 
-    LinkedList<RoutingTable> peers;
+    LinkedList<Peer> peers;
 
     static {
         System.loadLibrary("native-lib");
@@ -84,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public LinkedList<RoutingTable> getPeers() { return peers; }
+    public LinkedList<Peer> getPeers() { return peers; }
 
     public native String stringFromJNI();
 
