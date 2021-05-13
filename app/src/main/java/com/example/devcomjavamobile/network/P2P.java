@@ -48,6 +48,7 @@ public class P2P {
         // peer.setUdp(0);
         // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
         byte[] controlPacket = new byte[2071];
+        Log.d(TAG, "My fingerprint: " + myFingerPrint);
         newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
 
         byte packetType = controlPacket[0]; // "J", "P", "S" "T" "L" "D" "A"
@@ -80,19 +81,12 @@ public class P2P {
             controlPacket[i] = (byte)c;
             i++;
         }
-        while(i < 6)
-        {
-            controlPacket[i] = 0x00;
-            i++;
-        }
+        i = 7;
         for(char c : fingerPrint.toCharArray())
         {
             controlPacket[i] = (byte)c;
             i++;
         }
-
-
-
     }
 
     public void generatePassword(char[] password, int length)

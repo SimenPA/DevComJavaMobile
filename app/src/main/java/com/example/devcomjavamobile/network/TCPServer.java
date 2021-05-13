@@ -88,7 +88,7 @@ public class TCPServer implements Runnable {
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.socket().bind(sockAddress);
             activity.runOnUiThread(() -> makeText(activity, "TCP Server has started", Toast.LENGTH_SHORT).show());
-            while (true)
+            while (isRunning())
             {
                 channel = serverSocketChannel.accept();
                 if(channel != null)
@@ -147,7 +147,7 @@ public class TCPServer implements Runnable {
         {
             running.set(false);
             stopped.set(true);
-            serverSocketChannel.close();
+            serverSocketChannel.socket().close();
             makeText(activity, "TCP Server has stopped", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "TCP Server has stopped");
             worker.interrupt();
@@ -170,17 +170,32 @@ public class TCPServer implements Runnable {
         byte packetType = packetData.get(); // "P", "S" "T" "L" "D" "A"
         Log.i(TAG, "Packet Type: " + (char) packetType);
 
-        byte[] regardingCommunity = new byte[6]; // which community this packet belongs to
-        byte[] regardingFingerprint = new byte[16]; // which device this packet belongs to
-        packetData.get(regardingCommunity, 0, 6);
-        packetData.get(regardingFingerprint, 0, 16);
+        byte[] regardingComByte = new byte[6]; // which community this packet belongs to
+        byte[] regardingFingerprintByte= new byte[16]; // which device this packet belongs to
+        packetData.get(regardingComByte, 0, 6);
+        packetData.get(regardingFingerprintByte, 0, 16);
 
-        char[] regardingCom = (char) []
+        StringBuilder comStrb = new StringBuilder();
+        StringBuilder fingStrb = new StringBuilder();
+        char[] regardingCommunity = new char[6];
+        char[] regardingFingerprint = new char[16];
+        for(int i = 0; i < 6 ; i++)
+        {
+            if(regardingComByte[i] != 0x00)
+            {
+                comStrb.append((char)regardingComByte[i]);
+            }
+        }
+        for(int i = 0; i < 16 ; i++)
+        {
+            fingStrb.append((char)regardingFingerprintByte[i]);
+        }
+        Log.d(TAG, "Community: " + comStrb.toString());
+        Log.d(TAG, "Fingerprint: " + fingStrb.toString());
 
-        Log.d(TAG, "Regarding community: " + regardingCommunity.toString());
-        Log.d(TAG, "Regarding fingerprint: " + regardingFingerprint.toString());
 
-        if(packetData.hasRemaining()) {
+
+        if(packetData.remaining() >= 36) {
             byte[] buf = new byte[packetData.remaining()];
             packetData.get(buf);
         }

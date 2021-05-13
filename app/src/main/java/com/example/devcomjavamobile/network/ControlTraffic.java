@@ -92,10 +92,9 @@ public class ControlTraffic implements Runnable {
             while (this.isRunning()) {
                 try {
                     byte[] data = this.packetQueue.take();
-                    Log.d(TAG, "Package type from packet queue: " + (char) data[0]);
                     try {
                         this.socketChannel.write(ByteBuffer.wrap(data));
-                        Log.d(TAG, "Took and sent some stuff");
+                        Log.d(TAG, "Sent " + data.length + " bytes");
                     } catch (IOException e) {
                         Log.e(TAG, "Error writing " + data.length + " bytes to the VPN");
                         e.printStackTrace();
@@ -127,7 +126,6 @@ public class ControlTraffic implements Runnable {
         if (data.length > 30000) throw new Error("Packet too large");
         packetQueue.addLast(data);
         Log.d(TAG, "Written control package");
-
     }
 
     public boolean isRunning() {
