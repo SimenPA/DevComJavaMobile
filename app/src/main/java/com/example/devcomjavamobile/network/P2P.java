@@ -2,6 +2,10 @@ package com.example.devcomjavamobile.network;
 
 import android.util.Log;
 
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
+import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPHeader;
+
 import java.io.IOException;
 import java.net.Socket;
 import java.util.LinkedList;
@@ -33,18 +37,21 @@ public class P2P {
         controlTraffic.start();
         pHandler.addControlTraffic(fingerPrint, controlTraffic);
 
-        // sendControlJoin(controlSocket, community, fingerPrint);
+        sendControlJoin(controlTraffic, community, fingerPrint);
     }
 
-    public void sendControlJoin(Socket controlSocket, String commmunity, String fingerPrint)
+    public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint)
     {
         PeersHandler pHandler =  new PeersHandler(peers);
         Peer peer = pHandler.getPeer(fingerPrint);
 
-        peer.setUdp(0);
+        // peer.setUdp(0);
         // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
-        char[] controlPacket = new char[2071];
+        byte[] controlPacket = new byte[2071];
         newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
+
+        byte packetType = controlPacket[0]; // "J", "P", "S" "T" "L" "D" "A"
+        Log.i(TAG, "Packet Type: " + (char) packetType);
 
         char[] payload = new char[PASSWORD_LENGTH];
         generatePassword(payload, PASSWORD_LENGTH);
@@ -54,8 +61,9 @@ public class P2P {
 
         // aes_init(password, password length, password, encrypt_ctx, decrypt_ctx)
 
-        char[] encryptedPacket =  control_packet_encrypt(controlPacket, payload, peer.getPublicKeyFilePath());
-
+        // char[] encryptedPacket =  control_packet_encrypt(controlPacket, payload, peer.getPublicKeyFilePath());
+        Log.d(TAG, "Preparing to write control package");
+        ct.write(controlPacket);
     }
 
     public void sendControlSync(Socket controlSocket, String commmunity, String fingerPrint)
@@ -63,8 +71,27 @@ public class P2P {
 
     }
 
-    public void newControlPacket(char[] controlPacket, char type, String community, String fingerPrint)
+    public void newControlPacket(byte[] controlPacket, char type, String community, String fingerPrint)
     {
+        controlPacket[0] = (byte)type;
+        int i = 1;
+        for(char c : community.toCharArray())
+        {
+            controlPacket[i] = (byte)c;
+            i++;
+        }
+        while(i < 6)
+        {
+            controlPacket[i] = 0x00;
+            i++;
+        }
+        for(char c : fingerPrint.toCharArray())
+        {
+            controlPacket[i] = (byte)c;
+            i++;
+        }
+
+
 
     }
 
