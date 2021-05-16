@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <android/log.h>
 
-#define PRIVATE_KEY "/data/data/com.example.devcomjavamobile/public_key.pem.tramp"
+#define PRIVATE_KEY "/data/data/com.example.devcomjavamobile/private_key.pem.tramp"
 #define PUBLIC_KEY "/data/data/com.example.devcomjavamobile/public_key.pem.tramp"
 #define KEY_LENGTH 4096
 #define AES_BLOCK_SIZE 256

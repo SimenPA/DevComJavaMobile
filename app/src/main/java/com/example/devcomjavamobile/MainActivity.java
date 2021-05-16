@@ -7,6 +7,7 @@ import android.util.Log;
 
 import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.TunnelService;
+import com.example.devcomjavamobile.network.security.Crypto;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,9 +42,17 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
-        String fromC = stringFromJNI();
-        Log.i("MainActivity","Got the following string from C++: " + fromC );
-        generateKeys();
+        //String fromC = stringFromJNI();
+        //Log.i("MainActivity","Got the following string from C++: " + fromC );
+
+
+        Crypto crypto = new Crypto();
+        crypto.deleteKeys();
+        try {
+            crypto.genKeyPair();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         peers = new LinkedList<>();
 
