@@ -43,10 +43,10 @@ public class DashboardFragment extends Fragment {
         Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
         joinComBtn.setOnClickListener(view -> {
             LinkedList<Peer> peers = ((MainActivity)getActivity()).getPeers();
-            P2P p2p = new P2P(peers, ((MainActivity)getActivity()).createFingerprint());
+            P2P p2p = new P2P(peers);
             try {
                 p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });

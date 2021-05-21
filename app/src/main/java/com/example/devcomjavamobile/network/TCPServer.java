@@ -51,7 +51,7 @@ public class TCPServer implements Runnable {
 
     private final static String TAG = TCPServer.class.getSimpleName();
 
-    private final static int PORT_CONTROL = 7800;
+    private final static int PORT_CONTROL = 3283;
 
     ServerSocket ss;
     ServerSocketChannel serverSocketChannel;

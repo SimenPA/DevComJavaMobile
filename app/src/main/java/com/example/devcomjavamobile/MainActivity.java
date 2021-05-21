@@ -47,7 +47,13 @@ public class MainActivity extends AppCompatActivity {
 
 
         Crypto crypto = new Crypto();
-        crypto.deleteKeys();
+
+        try {
+            crypto.testEncryption();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         try {
             crypto.genKeyPair();
         } catch (Exception e) {

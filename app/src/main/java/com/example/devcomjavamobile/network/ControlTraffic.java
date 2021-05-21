@@ -32,7 +32,7 @@ public class ControlTraffic implements Runnable {
 
     private final BlockingDeque<byte[]> packetQueue = new LinkedBlockingDeque<>();
 
-    private final static int PORT_CONTROL = 7800;
+    private final static int PORT_CONTROL = 3283;
 
     public LinkedList<Peer> peers;
     public String physicalAddress = "";
@@ -115,8 +115,8 @@ public class ControlTraffic implements Runnable {
                 e.printStackTrace();
             }
         }
-        // Write from queue. Done due to operating in different thread
 
+        // Write from queue. Done due to operating in different thread
 
     }
 

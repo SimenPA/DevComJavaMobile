@@ -2,6 +2,7 @@ package com.example.devcomjavamobile.network.security;
 
 import android.util.Log;
 
+import org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -14,34 +15,50 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.AlgorithmParameters;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.Security;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.EncodedKeySpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.InvalidParameterSpecException;
+import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
     private final String PRIVATE_KEY_PATH =  "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
@@ -141,7 +158,7 @@ public class Crypto {
         return kf.generatePrivate(keySpecPKCS8);
     }
 
-    public PublicKey readPublicKey(String filePath) throws Exception {
+    public RSAPublicKey readPublicKey(String filePath) throws Exception {
 
         File file = new File(filePath);
         String publicKeyContent = new String(Files.readAllBytes(Paths.get(ClassLoader.getSystemResource(filePath).toURI())));
@@ -151,7 +168,7 @@ public class Crypto {
         KeyFactory kf = KeyFactory.getInstance("RSA");
 
         X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(publicKeyContent));
-        return kf.generatePublic(pubKeySpec);
+        return (RSAPublicKey) kf.generatePublic(pubKeySpec);
     }
 
     public byte[] encrypt(String data, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
@@ -179,6 +196,114 @@ public class Crypto {
 
         String decrypted = decrypt(encrypted, privKey);
         Log.d(TAG, "Decrypted: " + decrypted);
+    }
+
+    public SecretKey generateAESKey(char[] password) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
+
+
+
+        // Generating IV.
+        int ivSize = 16;
+        byte[] iv = new byte[ivSize];
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(iv);
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+        // Convert password char array to byte array for hashing
+        CharBuffer charBuffer = CharBuffer.wrap(password);
+        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
+        byte[] digestInput = Arrays.copyOfRange(byteBuffer.array(),
+                byteBuffer.position(), byteBuffer.limit());
+        Arrays.fill(byteBuffer.array(), (byte) 0);
+
+        // Hashing key.
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        digest.update(digestInput);
+        byte[] keyBytes = new byte[16];
+
+        // Hash three times
+        for (int i = 0; i < 3; i++)
+        {
+            digest.update(keyBytes);
+            System.arraycopy(digest.digest(), 0, keyBytes, 0, keyBytes.length);
+        }
+
+
+        //SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        KeySpec spec = new PBEKeySpec(password, keyBytes, 65536, 256);
+        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
+                .getEncoded(), "AES");
+        return secret;
+    }
+
+    public byte[] encrypt(String plainText, Cipher encryptCipher) throws Exception {
+
+        byte[] clean = plainText.getBytes();
+        byte[] encrypted = encryptCipher.doFinal(clean);
+
+        return encrypted;
+
+    }
+
+    public String decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
+
+        byte[] decrypted = decryptCipher.doFinal(encryptedBytes);
+
+        return new String(decrypted);
+    }
+
+    public void testEncryption() throws Exception
+    {
+        String testString = "hei ballefaen";
+        char[] password =  new char[16];
+        generatePassword(password, 16);
+        Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        aesInit(password.toString(), "", encryptCipher, decryptCipher);
+        byte[] encrypted = encrypt(testString, encryptCipher);
+        String decrypted =  decrypt(encrypted, decryptCipher);
+        Log.i(TAG, "Decrypted text: " + decrypted);
+    }
+
+    public void aesInit(String key, String salt, Cipher encryptCipher, Cipher decryptCipher) throws Exception {
+
+        int ivSize = 16;
+        byte[] iv = new byte[ivSize];
+        SecureRandom random = new SecureRandom();
+        random.nextBytes(iv);
+        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
+
+        // Hashing key.
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        digest.update(key.getBytes("UTF-8"));
+        byte[] keyBytes = new byte[16];
+        // Hashing three times
+        for(int i = 0; i > 3; i++)
+        {
+            System.arraycopy(digest.digest(), 0, keyBytes, 0, keyBytes.length);
+            digest.update(keyBytes);
+
+        }
+        SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+
+        // Encrypt cipher init.
+        encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+        // Decrypt cipher init.
+        decryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+    }
+
+    public void generatePassword(char[] password, int length)
+    {
+        int i = 0;
+
+        for(i = 0; i <= length - 1; i++) {
+            int n = ThreadLocalRandom.current().nextInt() % 26;
+            // int n = rand() % 26;
+            char c = (char) (n + 65);
+            password[i] = c;
+        }
     }
 }
 

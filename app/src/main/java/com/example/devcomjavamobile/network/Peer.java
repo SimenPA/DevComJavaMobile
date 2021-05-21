@@ -17,7 +17,7 @@ public class Peer {
     String fingerPrint = "";
     LinkedList<String> physicalAddresses;
     LinkedList<String> communities;
-    String password = "";
+    char[] password; // session key
     ControlTraffic controlTraffic = null; // Socket of the TCP control channel associated with this device
 
 
@@ -58,11 +58,11 @@ public class Peer {
         communities.add(community);
     }
 
-    public String getPassword() {
+    public char[] getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(char[] password) {
         this.password = password;
     }
 
