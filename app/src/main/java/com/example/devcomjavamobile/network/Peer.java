@@ -6,6 +6,7 @@ import android.os.ParcelFileDescriptor;
 import android.service.controls.Control;
 
 import java.net.Socket;
+import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedList;
 // Also known as routing_table in DevCom.c, but I(Simen Persch Andersen) prefer this name
 public class Peer {
@@ -20,9 +21,16 @@ public class Peer {
     char[] password; // session key
     ControlTraffic controlTraffic = null; // Socket of the TCP control channel associated with this device
 
+    public RSAPublicKey getPublicKey() {
+        return rsaPublicKey;
+    }
 
+    public void setPublicKey(RSAPublicKey rsaPublicKey) {
+        this.rsaPublicKey = rsaPublicKey;
+    }
 
-    String publicKeyFilePath; // Temporary variable, will find better later on
+    RSAPublicKey rsaPublicKey;
+
     int udp;
 
     public Peer() {
@@ -73,14 +81,6 @@ public class Peer {
     public int getUdp() { return udp; }
 
     public void setUdp(int udp) { this.udp = udp; }
-
-    public String getPublicKeyFilePath() {
-        return publicKeyFilePath;
-    }
-
-    public void setPublicKeyFilePath(String publicKeyFilePath) {
-        this.publicKeyFilePath = publicKeyFilePath;
-    }
 
     @Override
     public String toString() {

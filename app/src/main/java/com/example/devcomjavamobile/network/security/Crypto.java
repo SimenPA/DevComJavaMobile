@@ -198,45 +198,7 @@ public class Crypto {
         Log.d(TAG, "Decrypted: " + decrypted);
     }
 
-    public SecretKey generateAESKey(char[] password) throws NoSuchAlgorithmException, InvalidKeySpecException, UnsupportedEncodingException {
 
-
-
-        // Generating IV.
-        int ivSize = 16;
-        byte[] iv = new byte[ivSize];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
-        IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
-
-        // Convert password char array to byte array for hashing
-        CharBuffer charBuffer = CharBuffer.wrap(password);
-        ByteBuffer byteBuffer = Charset.forName("UTF-8").encode(charBuffer);
-        byte[] digestInput = Arrays.copyOfRange(byteBuffer.array(),
-                byteBuffer.position(), byteBuffer.limit());
-        Arrays.fill(byteBuffer.array(), (byte) 0);
-
-        // Hashing key.
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        digest.update(digestInput);
-        byte[] keyBytes = new byte[16];
-
-        // Hash three times
-        for (int i = 0; i < 3; i++)
-        {
-            digest.update(keyBytes);
-            System.arraycopy(digest.digest(), 0, keyBytes, 0, keyBytes.length);
-        }
-
-
-        //SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
-
-        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-        KeySpec spec = new PBEKeySpec(password, keyBytes, 65536, 256);
-        SecretKey secret = new SecretKeySpec(factory.generateSecret(spec)
-                .getEncoded(), "AES");
-        return secret;
-    }
 
     public byte[] encrypt(String plainText, Cipher encryptCipher) throws Exception {
 
@@ -261,16 +223,17 @@ public class Crypto {
         generatePassword(password, 16);
         Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        aesInit(password.toString(), "", encryptCipher, decryptCipher);
+        aesInit(password.toString(), encryptCipher, decryptCipher);
         byte[] encrypted = encrypt(testString, encryptCipher);
         String decrypted =  decrypt(encrypted, decryptCipher);
         Log.i(TAG, "Decrypted text: " + decrypted);
     }
 
-    public void aesInit(String key, String salt, Cipher encryptCipher, Cipher decryptCipher) throws Exception {
+    public void aesInit(String key, Cipher encryptCipher, Cipher decryptCipher) throws Exception {
 
         int ivSize = 16;
         byte[] iv = new byte[ivSize];
+
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
         IvParameterSpec ivParameterSpec = new IvParameterSpec(iv);
@@ -305,6 +268,7 @@ public class Crypto {
             password[i] = c;
         }
     }
+
 }
 
 

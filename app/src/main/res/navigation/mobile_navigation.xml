@@ -12,14 +12,14 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_dashboard"
-        android:name="com.example.devcomjavamobile.ui.dashboard.DashboardFragment"
-        android:label="@string/title_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+        android:id="@+id/navigation_tcp"
+        android:name="com.example.devcomjavamobile.ui.tcp.TCPFragment"
+        android:label="@string/title_tcp"
+        tools:layout="@layout/fragment_tcp" />
 
     <fragment
-        android:id="@+id/navigation_notifications"
-        android:name="com.example.devcomjavamobile.ui.notifications.NotificationsFragment"
-        android:label="@string/title_notifications"
-        tools:layout="@layout/fragment_notifications" />
+        android:id="@+id/navigation_info"
+        android:name="com.example.devcomjavamobile.ui.info.InfoFragment"
+        android:label="@string/title_info"
+        tools:layout="@layout/fragment_info" />
 </navigation>

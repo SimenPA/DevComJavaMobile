@@ -13,6 +13,9 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
+import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.PublicKeySender;
+import com.example.devcomjavamobile.network.UDPFileServer;
 import com.example.devcomjavamobile.network.UDPSender;
 import com.example.devcomjavamobile.network.UDPServer;
 
@@ -34,7 +37,8 @@ public class HomeFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_home, container, false);
 
 
-        UDPServer server = new UDPServer(getActivity());
+        UDPServer msgServer = new UDPServer(getActivity());
+        UDPFileServer fileServer = new UDPFileServer(getActivity());
 
         ipText = (EditText)root.findViewById(R.id.enterIPEditText);
         msgText = (EditText)root.findViewById(R.id.enterComEditText);
@@ -44,6 +48,21 @@ public class HomeFragment extends Fragment {
 
             Executor e = Executors.newCachedThreadPool();
             UDPSender b = new UDPSender(ipText.getText().toString(), msgText.getText().toString());
+            e.execute(b);
+
+        });
+
+        Button sendPubKeyBtn = (Button) root.findViewById(R.id.sendPubKeyBtn);
+        sendPubKeyBtn.setOnClickListener(view -> {
+            String fingerPrint = "";
+            try{
+                fingerPrint = Utility.createFingerPrint();
+            } catch (Exception e)
+            {
+                e.printStackTrace();
+            }
+            Executor e = Executors.newCachedThreadPool();
+            PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 1337, fingerPrint);
             e.execute(b);
 
         });
@@ -60,14 +79,24 @@ public class HomeFragment extends Fragment {
 
         Button startServerBtn = (Button) root.findViewById(R.id.startServerBtn);
         startServerBtn.setOnClickListener(view -> {
-            server.start();
+            msgServer.start();
         });
 
         Button stopServerBtn = (Button) root.findViewById(R.id.stopServerBtn);
         stopServerBtn.setOnClickListener(view -> {
-            server.interrupt();
+            msgServer.interrupt();
         });
 
+
+        Button startFileServerBtn = (Button) root.findViewById(R.id.startFileServerBtn);
+        startFileServerBtn.setOnClickListener(view -> {
+            fileServer.start();
+        });
+
+        Button stopFileServerBtn = (Button) root.findViewById(R.id.stopFileServerBtn);
+        stopFileServerBtn.setOnClickListener(view -> {
+            fileServer.interrupt();
+        });
         return root;
     }
 }

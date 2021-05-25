@@ -1,4 +1,4 @@
-package com.example.devcomjavamobile.ui.dashboard;
+package com.example.devcomjavamobile.ui.tcp;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,19 +20,19 @@ import com.example.devcomjavamobile.network.TCPServer;
 import java.io.IOException;
 import java.util.LinkedList;
 
-public class DashboardFragment extends Fragment {
+public class TCPFragment extends Fragment {
 
-    private DashboardViewModel dashboardViewModel;
-    private static final String TAG = DashboardFragment.class.getSimpleName();
+    private TCPViewModel TCPViewModel;
+    private static final String TAG = TCPFragment.class.getSimpleName();
 
     EditText communityText, fingerPrintText, addressText;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
-        dashboardViewModel =
-                ViewModelProviders.of(this).get(DashboardViewModel.class);
-        View root = inflater.inflate(R.layout.fragment_dashboard, container, false);
+        TCPViewModel =
+                ViewModelProviders.of(this).get(TCPViewModel.class);
+        View root = inflater.inflate(R.layout.fragment_tcp, container, false);
 
         TCPServer server = new TCPServer(getActivity());
 

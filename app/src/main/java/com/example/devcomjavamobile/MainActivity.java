@@ -16,6 +16,7 @@ import androidx.navigation.Navigation;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
+import java.io.File;
 import java.util.LinkedList;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,13 +38,15 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications)
+                R.id.navigation_home, R.id.navigation_tcp, R.id.navigation_home)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
         NavigationUI.setupWithNavController(navView, navController);
         //String fromC = stringFromJNI();
         //Log.i("MainActivity","Got the following string from C++: " + fromC );
+
+        listItems();
 
 
         Crypto crypto = new Crypto();
@@ -92,6 +95,13 @@ public class MainActivity extends AppCompatActivity {
         } else {
             onActivityResult(START_TUNNEL, RESULT_OK, null);
         }
+    }
+
+    public void listItems()
+    {
+        File f = new File("/data/data/com.example.devcomjavamobile/");
+        String[] fileList = f.list();
+        for(String file : fileList) { Log.i(TAG, file); }
     }
 
     public LinkedList<Peer> getPeers() { return peers; }

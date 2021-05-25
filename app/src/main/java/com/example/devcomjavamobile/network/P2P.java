@@ -3,6 +3,7 @@ package com.example.devcomjavamobile.network;
 import android.util.Log;
 
 import com.example.devcomjavamobile.network.security.Crypto;
+import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPHeader;
@@ -24,6 +25,7 @@ import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
+import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 
 import static com.example.devcomjavamobile.network.Peer.PASSWORD_LENGTH;
@@ -48,7 +50,7 @@ public class P2P {
             e.printStackTrace();
         }
     }
-    public void joinCommunity(String community, String devFingerPrint, String devPhysicalAddress) throws IOException, InvalidKeySpecException, NoSuchAlgorithmException {
+    public void joinCommunity(String community, String devFingerPrint, String devPhysicalAddress) throws Exception {
         PeersHandler pHandler = new PeersHandler(peers);
         Log.i(TAG, "My fingerprint: " + myFingerPrint.toUpperCase());
         pHandler.addFingerPrint(devFingerPrint);
@@ -64,13 +66,13 @@ public class P2P {
         sendControlJoin(controlTraffic, community, devFingerPrint);
     }
 
-    public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {
+    public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws Exception {
         PeersHandler pHandler =  new PeersHandler(peers);
         Peer peer = pHandler.getPeer(fingerPrint);
 
         Crypto crypto = new Crypto();
 
-        // peer.setUdp(0);
+        peer.setUdp(0);
         // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
         byte[] controlPacket = new byte[2071];
         Log.d(TAG, "My fingerprint: " + myFingerPrint);
@@ -84,11 +86,14 @@ public class P2P {
         Log.d(TAG, "Session key: " + payload.toString());
         // TODO: This is where I left off after 26.4. Method is send_control_join in control_traffic.c
         peer.setPassword(payload); // adds session key
-        // SecretKey key = crypto.generateAESKey(payload);
 
-        // aes_init(password, password length, password, encrypt_ctx, decrypt_ctx)
+        Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        crypto.aesInit(payload.toString(), encryptCipher, decryptCipher);
 
-        // char[] encryptedPacket =  control_packet_encrypt(controlPacket, payload, peer.getPublicKeyFilePath());
+        controlPacket = RSAUtil.encrypt(controlPacket, peer.getPublicKey());
+        // controlPacket = controlPacketSign(controlPacket);
+
         Log.d(TAG, "Preparing to write control package");
         ct.write(controlPacket);
     }

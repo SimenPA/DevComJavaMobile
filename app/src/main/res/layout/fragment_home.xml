@@ -7,23 +7,42 @@
     tools:context=".ui.home.HomeFragment">
 
     <Button
-        android:id="@+id/stopServerBtn"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:text="Stop Server"
+        android:id="@+id/stopFileServerBtn"
+        android:layout_width="170dp"
+        android:layout_height="65dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:text="Stop UDP File Server"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.50"
+        app:layout_constraintTop_toBottomOf="@+id/startFileServerBtn" />
+
+    <Button
+        android:id="@+id/startFileServerBtn"
+        android:layout_width="170dp"
+        android:layout_height="65dp"
+        android:layout_marginTop="27dp"
+        android:layout_marginEnd="10dp"
+        android:text="Start UDP File Server"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sendPubKeyBtn" />
+
+    <Button
+        android:id="@+id/stopServerBtn"
+        android:layout_width="170dp"
+        android:layout_height="65dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:text="Stop UDP Msg Server"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/startServerBtn" />
 
     <Button
         android:id="@+id/startServerBtn"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="Start Server"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.50"
+        android:layout_width="174dp"
+        android:layout_height="65dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="28dp"
+        android:text="Start UDP File Server"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/sendMsgBtn" />
 
@@ -78,13 +97,22 @@
 
     <Button
         android:id="@+id/sendMsgBtn"
-        android:layout_width="200dp"
+        android:layout_width="180dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
         android:layout_marginTop="10dp"
         android:text="Send message"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.50"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/enterComEditText" />
+
+    <Button
+        android:id="@+id/sendPubKeyBtn"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:layout_marginEnd="10dp"
+        android:text="Send public key"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/enterComEditText" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
