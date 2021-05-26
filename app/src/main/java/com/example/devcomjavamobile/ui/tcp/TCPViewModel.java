@@ -10,7 +10,7 @@ public class TCPViewModel extends ViewModel {
 
     public TCPViewModel() {
         mText = new MutableLiveData<>();
-        mText.setValue("This is dashboard fragment");
+        mText.setValue("This is TCP fragment");
     }
 
     public LiveData<String> getText() {

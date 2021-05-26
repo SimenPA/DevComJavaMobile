@@ -19,6 +19,7 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.devcomjavamobile.Utility;
 import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
 import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
 
@@ -70,7 +71,11 @@ public class TunnelService extends VpnService implements IProtectSocket {
         // getFilesDir(); // get key pair file
         currentService = this;
 
-        fingerPrint = createFingerprint();
+        try {
+            fingerPrint = Utility.createFingerPrint();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         tunnelAddress = createTunnelAddress();
         if(Build.FINGERPRINT.equals("google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"))
         {
@@ -152,8 +157,8 @@ public class TunnelService extends VpnService implements IProtectSocket {
         ParcelFileDescriptor tunnelInterface = new Builder()
                 .addAddress(tunnelAddress, 128)
                 .allowFamily(AF_INET6)
-                .allowFamily(AF_INET)
-                .addRoute("0.0.0.0", 0) // All IPv4 addresses
+                //.allowFamily(AF_INET)
+                //.addRoute("0.0.0.0", 0) // All IPv4 addresses
                 .addRoute("0000:0000:0000:0000:0000:0000:0000:0000", 0) // All IPv6 addresses
                 .setMtu(MAX_PACKET_LEN)
                 .setBlocking(true)
@@ -238,7 +243,6 @@ public class TunnelService extends VpnService implements IProtectSocket {
         return this.tunnelInterface != null;
     }
 
-    private native String createFingerprint();
 
     private String createTunnelAddress()
     {

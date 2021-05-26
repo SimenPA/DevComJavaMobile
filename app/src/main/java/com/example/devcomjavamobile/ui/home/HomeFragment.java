@@ -27,8 +27,6 @@ public class HomeFragment extends Fragment {
     private HomeViewModel homeViewModel;
     private static final String TAG = HomeFragment.class.getSimpleName();
 
-    Button stopTunnelBtn;
-
     EditText ipText, msgText;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
