@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.example.devcomjavamobile.Utility;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,6 +23,8 @@ public class UDPFileServer implements Runnable {
 
     DatagramSocket ds;
     DatagramPacket packet;
+
+    private final static String PUBLIC_KEY_PATH = "/data/data/com.example.devcomjavamobile/public_key.pem.tramp";
 
     public boolean isRunning() {
         return running.get();
@@ -52,6 +56,7 @@ public class UDPFileServer implements Runnable {
     }
 
     public void interrupt() {
+        Log.i(TAG, "Interrupting UDP file server");
         if(isRunning())
         {
             running.set(false);
@@ -62,10 +67,11 @@ public class UDPFileServer implements Runnable {
                     Toast.makeText(activity, "UDP File Server has stopped", Toast.LENGTH_SHORT).show();
                 }
             });
-            Log.i("UDPServer", "UDP File Server has stopped");
+            Log.i(TAG, "UDP File Server has stopped");
             worker.interrupt();
         }
         else {
+            Log.i(TAG, "UDP File server is not running");
             Toast.makeText(activity, "UDP Server is not running", Toast.LENGTH_SHORT).show();
         }
     }
@@ -93,7 +99,6 @@ public class UDPFileServer implements Runnable {
 
         while(isRunning()) {
             try {
-
                 DatagramPacket receiveFileNamePacket = new DatagramPacket(receiveFileName, receiveFileName.length);
                 ds.receive(receiveFileNamePacket);
 
@@ -153,8 +158,9 @@ public class UDPFileServer implements Runnable {
                     }
                     // Check for last datagram
                     if (flag) {
-                        Log.i(TAG, "Received last datagram, closing server/socket");
+                        Log.i(TAG, "Received last datagram, closing file and attempts to send back own key");
                         outToFile.close();
+                        returnPublicKey(ds, address, port);
                         interrupt();
                     }
                 }
@@ -171,8 +177,47 @@ public class UDPFileServer implements Runnable {
         ackPacket[0] = (byte) (foundLast >> 8);
         ackPacket[1] = (byte) (foundLast);
         // the datagram packet to be sent
+        Log.i(TAG, "Sending ack to " + address.toString() + " at port " + port);
         DatagramPacket acknowledgement = new DatagramPacket(ackPacket, ackPacket.length, address, port);
         socket.send(acknowledgement);
         Log.i(TAG, "Sent ack: Sequence Number = " + foundLast);
+    }
+
+    // TODO: Sender til seg selv?
+    private void returnPublicKey(DatagramSocket socket, InetAddress address, int port) throws IOException {
+        int ttl = 0;
+        while(ttl < 100) {
+            ttl++;
+            byte[] fileRequestAck = new byte[1024];
+            DatagramPacket fileRequestPacket = new DatagramPacket(fileRequestAck, fileRequestAck.length);
+            ds.setSoTimeout(50);
+            ds.receive(fileRequestPacket);
+
+            byte[] data = fileRequestPacket.getData();
+            String fileRequestAckString = new String(data, 0, fileRequestPacket.getLength());
+            if (fileRequestAckString.equals("PK")) {
+                try {
+                    Log.i(TAG, "Received file request ack");
+                    Log.i(TAG, "Sending public key file name to " + address.toString() + " at port " + port);
+                    String fileName;
+
+                    File f = new File(PUBLIC_KEY_PATH);
+                    fileName = Utility.createFingerPrint() + ".pem.tramp"; // FINGERPRINT.pem.tramp  --- like 99DE645C04C8C7B4.pem.tramp, NOT public_key.pem.tramp
+                    byte[] fileNameBytes = fileName.getBytes(); // File name as bytes to send it
+                    DatagramPacket fileNamePacket = new DatagramPacket(fileNameBytes, fileNameBytes.length, address, port); // File name packet
+                    socket.send(fileNamePacket); // Sending the packet with the file name
+
+                    PublicKeySender sender = new PublicKeySender(address.toString(), port, Utility.createFingerPrint());
+                    byte[] fileByteArray = PublicKeySender.readFileToByteArray(f); // Array of bytes the file is made of
+                    sender.sendFile(socket, fileByteArray, address, port); // Entering the method to send the actual file
+                    Log.i(TAG, "Done sending public key file");
+                    break;
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+        }
+
     }
 }
