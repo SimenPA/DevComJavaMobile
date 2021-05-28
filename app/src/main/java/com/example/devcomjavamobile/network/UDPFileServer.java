@@ -1,6 +1,7 @@
 package com.example.devcomjavamobile.network;
 
 import android.app.Activity;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -80,6 +81,7 @@ public class UDPFileServer implements Runnable {
     {
         running.set(true);
         stopped.set(false);
+        byte[] receiveTransferType = new byte[1];
         byte[] receiveFileName = new byte[1024];
         //InetAddress serverAddress = Inet4Address.getByName(getIpAddress());
         try
@@ -99,75 +101,87 @@ public class UDPFileServer implements Runnable {
 
         while(isRunning()) {
             try {
-                DatagramPacket receiveFileNamePacket = new DatagramPacket(receiveFileName, receiveFileName.length);
-                ds.receive(receiveFileNamePacket);
+                DatagramPacket receiveTransferTypePacket = new DatagramPacket(receiveTransferType, receiveTransferType.length);
+                ds.receive(receiveTransferTypePacket);
+                byte[] data = receiveTransferTypePacket.getData();
+                String transferType = new String(data, 0, receiveTransferTypePacket.getLength());
 
-                byte[] data = receiveFileNamePacket.getData();
-                String fileName = new String(data, 0, receiveFileNamePacket.getLength());
-                Log.i(TAG, "Attempting to write filename: " + fileName + " to path: " + serverRoute + fileName);
+                if (transferType.equals("K")) { // K = "key", "F" = "file"
 
-                File f = new File(serverRoute + "" + fileName); // Creating the file
-                FileOutputStream outToFile = new FileOutputStream(f); // Creating the stream through which we write the file content
+                    DatagramPacket receiveFileNamePacket = new DatagramPacket(receiveFileName, receiveFileName.length);
+                    ds.receive(receiveFileNamePacket);
 
-                Log.i(TAG, "Receiving file");
-                boolean flag; // Have we reached end of file
-                int sequenceNumber = 0; // Order of sequences
-                int foundLast = 0; // The las sequence found
+                    data = receiveFileNamePacket.getData();
+                    String fileName = new String(data, 0, receiveFileNamePacket.getLength());
+                    Log.i(TAG, "Attempting to write filename: " + fileName + " to path: " + serverRoute + fileName);
 
-                while (isRunning()) {
+                    File f = new File(serverRoute + "" + fileName); // Creating the file
+                    FileOutputStream outToFile = new FileOutputStream(f); // Creating the stream through which we write the file content
+
                     Log.i(TAG, "Receiving file");
-                    byte[] message = new byte[1024]; // Where the data from the received datagram is stored
-                    byte[] fileByteArray = new byte[1021]; // Where we store the data to be writen to the file
+                    boolean flag; // Have we reached end of file
+                    int sequenceNumber = 0; // Order of sequences
+                    int foundLast = 0; // The las sequence found
 
-                    // Receive packet and retrieve the data
-                    DatagramPacket receivedPacket = new DatagramPacket(message, message.length);
-                    ds.receive(receivedPacket);
-                    message = receivedPacket.getData(); // Data to be written to the file
-                    Log.i(TAG, "Received data");
+                    while (isRunning()) {
+                        Log.i(TAG, "Receiving file");
+                        byte[] message = new byte[1024]; // Where the data from the received datagram is stored
+                        byte[] fileByteArray = new byte[1021]; // Where we store the data to be writen to the file
 
-                    // Get port and address for sending acknowledgment
-                    InetAddress address = receivedPacket.getAddress();
-                    int port = receivedPacket.getPort();
+                        // Receive packet and retrieve the data
+                        DatagramPacket receivedPacket = new DatagramPacket(message, message.length);
+                        ds.receive(receivedPacket);
+                        message = receivedPacket.getData(); // Data to be written to the file
+                        Log.i(TAG, "Received data");
 
-                    // Retrieve sequence number
-                    sequenceNumber = ((message[0] & 0xff) << 8) + (message[1] & 0xff);
-                    // Check if we reached last datagram (end of file)
-                    flag = (message[2] & 0xff) == 1;
-                    Log.i(TAG, "Sequence number: " + sequenceNumber);
+                        // Get port and address for sending acknowledgment
+                        InetAddress address = receivedPacket.getAddress();
+                        int port = receivedPacket.getPort();
 
-                    // If sequence number is the last seen + 1, then it is correct
-                    // We get the data from the message and write the ack that it has been received correctly
-                    if (sequenceNumber == (foundLast + 1)) {
+                        // Retrieve sequence number
+                        sequenceNumber = ((message[0] & 0xff) << 8) + (message[1] & 0xff);
+                        // Check if we reached last datagram (end of file)
+                        flag = (message[2] & 0xff) == 1;
+                        Log.i(TAG, "Sequence number: " + sequenceNumber);
 
-                        // set the last sequence number to be the one we just received
-                        foundLast = sequenceNumber;
+                        // If sequence number is the last seen + 1, then it is correct
+                        // We get the data from the message and write the ack that it has been received correctly
+                        if (sequenceNumber == (foundLast + 1)) {
 
-                        // Retrieve data from message
-                        System.arraycopy(message, 3, fileByteArray, 0, 1021);
+                            // set the last sequence number to be the one we just received
+                            foundLast = sequenceNumber;
 
-                        // Write the retrieved data to the file and print received data sequence number
-                        outToFile.write(fileByteArray);
-                        Log.i(TAG, "Received: Sequence number:" + foundLast);
+                            // Retrieve data from message
+                            System.arraycopy(message, 3, fileByteArray, 0, 1021);
 
-                        // Send acknowledgement
-                        sendAck(foundLast, ds, address, port);
-                    } else {
-                        Log.i(TAG, "Expected sequence number: " + (foundLast + 1) + " but received " + sequenceNumber + ". DISCARDING");
-                        // Re send the acknowledgement
-                        sendAck(foundLast, ds, address, port);
-                    }
-                    // Check for last datagram
-                    if (flag) {
-                        Log.i(TAG, "Received last datagram, closing file and attempts to send back own key");
-                        outToFile.close();
-                        returnPublicKey(ds, address, port);
-                        interrupt();
+                            // Write the retrieved data to the file and print received data sequence number
+                            outToFile.write(fileByteArray);
+                            Log.i(TAG, "Received: Sequence number:" + foundLast);
+
+                            // Send acknowledgement
+                            sendAck(foundLast, ds, address, port);
+                        } else {
+                            Log.i(TAG, "Expected sequence number: " + (foundLast + 1) + " but received " + sequenceNumber + ". DISCARDING");
+                            // Re send the acknowledgement
+                            sendAck(foundLast, ds, address, port);
+                        }
+                        // Check for last datagram
+                        if (flag) {
+                            Log.i(TAG, "Received last datagram, closing file and attempts to send back own key");
+                            outToFile.close();
+                            if(transferType.equals("K")) returnPublicKey(ds, address, port);
+                            interrupt();
+                        }
                     }
                 }
+                else if(transferType.equals("M")) { // M = "message"
+                    break; // to be developed
+                }
 
-            } catch (IOException e) {
+            } catch(IOException e){
                 e.printStackTrace();
             }
+
         }
     }
 
@@ -183,8 +197,8 @@ public class UDPFileServer implements Runnable {
         Log.i(TAG, "Sent ack: Sequence Number = " + foundLast);
     }
 
-    // TODO: Sender til seg selv?
     private void returnPublicKey(DatagramSocket socket, InetAddress address, int port) throws IOException {
+        /*
         int ttl = 0;
         while(ttl < 100) {
             ttl++;
@@ -196,8 +210,8 @@ public class UDPFileServer implements Runnable {
             byte[] data = fileRequestPacket.getData();
             String fileRequestAckString = new String(data, 0, fileRequestPacket.getLength());
             if (fileRequestAckString.equals("PK")) {
+                Log.i(TAG, "Received file request ack");
                 try {
-                    Log.i(TAG, "Received file request ack");
                     Log.i(TAG, "Sending public key file name to " + address.toString() + " at port " + port);
                     String fileName;
 
@@ -211,12 +225,28 @@ public class UDPFileServer implements Runnable {
                     byte[] fileByteArray = PublicKeySender.readFileToByteArray(f); // Array of bytes the file is made of
                     sender.sendFile(socket, fileByteArray, address, port); // Entering the method to send the actual file
                     Log.i(TAG, "Done sending public key file");
-                    break;
                 } catch (Exception ex) {
                     ex.printStackTrace();
                 }
-
             }
+        }
+         */
+        try {
+            Log.i(TAG, "Sending public key file name to " + address.toString() + " at port " + port);
+            String fileName;
+
+            File f = new File(PUBLIC_KEY_PATH);
+            fileName = Utility.createFingerPrint() + ".pem.tramp"; // FINGERPRINT.pem.tramp  --- like 99DE645C04C8C7B4.pem.tramp, NOT public_key.pem.tramp
+            byte[] fileNameBytes = fileName.getBytes(); // File name as bytes to send it
+            DatagramPacket fileNamePacket = new DatagramPacket(fileNameBytes, fileNameBytes.length, address, port); // File name packet
+            socket.send(fileNamePacket); // Sending the packet with the file name
+
+            PublicKeySender sender = new PublicKeySender(address.toString(), port, Utility.createFingerPrint());
+            byte[] fileByteArray = PublicKeySender.readFileToByteArray(f); // Array of bytes the file is made of
+            sender.sendFile(socket, fileByteArray, address, port); // Entering the method to send the actual file
+            Log.i(TAG, "Done sending public key file");
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
     }

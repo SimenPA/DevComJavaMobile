@@ -1,7 +1,10 @@
 package com.example.devcomjavamobile.network;
 
+import android.app.Activity;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
@@ -38,9 +41,11 @@ public class P2P {
 
     LinkedList<Peer> peers;
     String myFingerPrint;
+    Activity activity;
 
-    public P2P(LinkedList<Peer> peers)  {
+    public P2P(LinkedList<Peer> peers, Activity activity)  {
         this.peers = peers;
+        this.activity =  activity;
         try
         {
             myFingerPrint =  createFingerprint();
@@ -69,33 +74,54 @@ public class P2P {
     public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws Exception {
         PeersHandler pHandler =  new PeersHandler(peers);
         Peer peer = pHandler.getPeer(fingerPrint);
+        boolean hasPublicKey = false;
+        if(peer.getPublicKey() == null) // check for public key in files if
+        {
+            Log.i(TAG, "Public key file not in peer, checking for saved keys");
+            File f = new File("/data/data/com.example.devcomjavamobile/");
+            String[] fileList = f.list();
+            for(String file : fileList) {
+                if(file.equals(fingerPrint + "pem.tramp"))
+                {
+                    Crypto c = new Crypto();
+                    RSAPublicKey pk = c.readPublicKey(file);
+                    peer.setPublicKey(pk);
+                    hasPublicKey = true;
+                }
+            }
+        } else { hasPublicKey = true; }
 
-        Crypto crypto = new Crypto();
+        if(hasPublicKey) {
+            Crypto crypto = new Crypto();
 
-        peer.setUdp(0);
-        // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
-        byte[] controlPacket = new byte[2071];
-        Log.d(TAG, "My fingerprint: " + myFingerPrint);
-        newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
+            peer.setUdp(0);
+            // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
+            byte[] controlPacket = new byte[2071];
+            Log.d(TAG, "My fingerprint: " + myFingerPrint);
+            newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
 
-        byte packetType = controlPacket[0]; // "J", "P", "S" "T" "L" "D" "A"
-        Log.i(TAG, "Packet Type: " + (char) packetType);
+            byte packetType = controlPacket[0]; // "J", "P", "S" "T" "L" "D" "A"
+            Log.i(TAG, "Packet Type: " + (char) packetType);
 
-        char[] payload = new char[PASSWORD_LENGTH];
-        crypto.generatePassword(payload, PASSWORD_LENGTH);
-        Log.d(TAG, "Session key: " + payload.toString());
-        // TODO: This is where I left off after 26.4. Method is send_control_join in control_traffic.c
-        peer.setPassword(payload); // adds session key
+            char[] payload = new char[PASSWORD_LENGTH];
+            crypto.generatePassword(payload, PASSWORD_LENGTH);
+            Log.d(TAG, "Session key: " + payload.toString());
+            // TODO: This is where I left off after 26.4. Method is send_control_join in control_traffic.c
+            peer.setPassword(payload); // adds session key
 
-        Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        crypto.aesInit(payload.toString(), encryptCipher, decryptCipher);
+            Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            crypto.aesInit(payload.toString(), encryptCipher, decryptCipher);
 
-        controlPacket = RSAUtil.encrypt(controlPacket, peer.getPublicKey());
-        // controlPacket = controlPacketSign(controlPacket);
+            controlPacket = RSAUtil.encrypt(controlPacket, peer.getPublicKey()); // encrypt using AES
+            int signatureLength = RSAUtil.sign(controlPacket); // sign with RSA public key
 
-        Log.d(TAG, "Preparing to write control package");
-        ct.write(controlPacket);
+            Log.d(TAG, "Preparing to write control package");
+            ct.write(controlPacket);
+        } else {
+            Log.i(TAG, "Public key is unknown, unable to proceed");
+            activity.runOnUiThread(() -> Toast.makeText(activity, "No public key known for fingerprint: " + fingerPrint, Toast.LENGTH_SHORT).show());
+        }
     }
 
     public void sendControlSync(Socket controlSocket, String commmunity, String fingerPrint)

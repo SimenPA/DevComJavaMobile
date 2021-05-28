@@ -171,7 +171,7 @@ public class TCPServer implements Runnable {
         Log.i(TAG, "Packet Type: " + (char) packetType);
 
         byte[] regardingComByte = new byte[6]; // which community this packet belongs to
-        byte[] regardingFingerprintByte= new byte[16]; // which device this packet belongs to
+        byte[] regardingFingerprintByte = new byte[16]; // which device this packet belongs to
         packetData.get(regardingComByte, 0, 6);
         packetData.get(regardingFingerprintByte, 0, 16);
 

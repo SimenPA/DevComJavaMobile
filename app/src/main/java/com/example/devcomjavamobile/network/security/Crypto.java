@@ -188,7 +188,7 @@ public class Crypto {
         PrivateKey privKey = readPrivateKey(PRIVATE_KEY_PATH);
         PublicKey pubKey = readPublicKey(PUBLIC_KEY_PATH);
 
-        String testString = "hei hei";
+        String testString = "RSA keys test";
         Log.d(TAG, "Unencrypted: " + testString);
 
         byte[] encrypted = encrypt(testString, pubKey);
@@ -218,7 +218,7 @@ public class Crypto {
 
     public void testEncryption() throws Exception
     {
-        String testString = "hei ballefaen";
+        String testString = "AES Test";
         char[] password =  new char[16];
         generatePassword(password, 16);
         Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");

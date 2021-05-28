@@ -43,7 +43,7 @@ public class TCPFragment extends Fragment {
         Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
         joinComBtn.setOnClickListener(view -> {
             LinkedList<Peer> peers = ((MainActivity)getActivity()).getPeers();
-            P2P p2p = new P2P(peers);
+            P2P p2p = new P2P(peers, getActivity());
             try {
                 p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());
             } catch (Exception e) {

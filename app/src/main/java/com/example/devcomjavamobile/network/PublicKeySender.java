@@ -38,19 +38,27 @@ public class PublicKeySender implements Runnable {
     @Override
     public void run() {
         try {
-            Log.i(TAG, "Sending file name");
+
+
             DatagramSocket socket = new DatagramSocket();
             InetAddress address = InetAddress.getByName(host);
-            String fileName;
 
+            Log.i(TAG, "Sending transfer type");
+            String transferType = "K"; // K = key
+            byte[] transferTypeBytes = transferType.getBytes();
+            DatagramPacket transferTypePacket = new DatagramPacket(transferTypeBytes, transferTypeBytes.length ,address, port);
+            socket.send(transferTypePacket);
+
+            Log.i(TAG, "Sending file name");
             File f = new File(PUBLIC_KEY_PATH);
-            fileName = Utility.createFingerPrint() + ".pem.tramp"; // FINGERPRINT.pem.tramp  --- like 99DE645C04C8C7B4.pem.tramp, NOT public_key.pem.tramp
+            String fileName = Utility.createFingerPrint() + ".pem.tramp"; // FINGERPRINT.pem.tramp  --- like 99DE645C04C8C7B4.pem.tramp, NOT public_key.pem.tramp
             byte[] fileNameBytes = fileName.getBytes(); // File name as bytes to send it
             Log.i(TAG, "Sending file name to " + address.toString() + " at port " + port);
             DatagramPacket fileStatPacket = new DatagramPacket(fileNameBytes, fileNameBytes.length, address, port); // File name packet
             socket.send(fileStatPacket); // Sending the packet with the file name
 
             byte[] fileByteArray = readFileToByteArray(f); // Array of bytes the file is made of
+
             sendFile(socket, fileByteArray, address, port); // Entering the method to send the actual file
             receiveFile(socket, address, port);
             socket.close();
@@ -60,7 +68,8 @@ public class PublicKeySender implements Runnable {
         }
     }
 
-    public void sendFile(DatagramSocket socket, byte[] fileByteArray, InetAddress address, int port) throws IOException {
+    public void sendFile(DatagramSocket socket, byte[] fileByteArray, InetAddress address, int port) throws Exception {
+
         Log.i(TAG, "Sending file");
         int sequenceNumber = 0; // For order
         boolean flag; // To see if we got to the end of the file
@@ -87,6 +96,7 @@ public class PublicKeySender implements Runnable {
             } else { // If it is the last datagram
                 System.arraycopy(fileByteArray, i, message, 3, fileByteArray.length - i);
             }
+
             Log.i(TAG, "Sending file to " + address.toString() + "at port " + port);
             DatagramPacket sendPacket = new DatagramPacket(message, message.length, address, port); // The data to be sent
             socket.send(sendPacket); // Sending the data
@@ -134,12 +144,13 @@ public class PublicKeySender implements Runnable {
 
     private void receiveFile(DatagramSocket socket, InetAddress address, int port) throws IOException {
         // Send ack that we want to receive the recipients public key in order for NAT to let it through
+        /*
         String fileRequestAck = "PK"; // FINGERPRINT.pem.tramp  --- like 99DE645C04C8C7B4.pem.tramp, NOT public_key.pem.tramp
         byte[] fileRequestAckBytes = fileRequestAck.getBytes(); // File name as bytes to send it
         Log.i(TAG, "Sending public key file request ack to " + address.toString() + " at port " + port);
         DatagramPacket fileRequestAckPacket = new DatagramPacket(fileRequestAckBytes, fileRequestAckBytes.length, address, port); // File name packet
         socket.send(fileRequestAckPacket);
-
+         */
         boolean receivedFileName = false;
         int ttl = 0;
 
@@ -219,13 +230,8 @@ public class PublicKeySender implements Runnable {
                 }
             } else {
                 ttl++;
-                Log.i(TAG, "Did not receive file name request packet");
-                if(ttl < 25)
+                if(ttl > 25)
                 {
-                    Log.i(TAG, "Resending file name request packet");
-                    socket.send(fileRequestAckPacket);
-                }
-                else {
                     Log.i(TAG, "Socket timed out waiting for file name");
                     break;
                 }

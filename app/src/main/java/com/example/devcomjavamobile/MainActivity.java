@@ -8,6 +8,7 @@ import android.util.Log;
 import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.TunnelService;
 import com.example.devcomjavamobile.network.security.Crypto;
+import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -48,8 +49,11 @@ public class MainActivity extends AppCompatActivity {
         //Log.i("MainActivity","Got the following string from C++: " + fromC );
 
         listItems();
-
-
+        try{
+            RSAUtil.testSignAndVerify();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Crypto crypto = new Crypto();
 
         try {

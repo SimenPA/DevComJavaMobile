@@ -53,7 +53,7 @@ public class ControlTraffic implements Runnable {
         this.physicalAddress =  physicalAddress;
     }
 
-    public void start() throws IOException {
+    public void start() {
         Log.d(TAG, "Control Traffic is being started");
         worker = new Thread(this);
         worker.start();
