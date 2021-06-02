@@ -26,6 +26,7 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.LinkedList;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -34,6 +35,7 @@ import android.os.Handler;
 import androidx.annotation.NonNull;
 
 import com.example.devcomjavamobile.MainActivity;
+import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.Session;
 import com.example.devcomjavamobile.network.vpn.socket.DataConst;
 import com.example.devcomjavamobile.network.vpn.transport.PacketHeaderException;
@@ -62,6 +64,8 @@ public class TCPServer implements Runnable {
     InputStreamReader isr;
     BufferedReader br;
 
+    LinkedList<Peer> peers;
+
     private ByteBuffer packet = ByteBuffer.allocate(MAX_PACKET_LEN);
 
     Activity activity;
@@ -71,8 +75,10 @@ public class TCPServer implements Runnable {
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public TCPServer(Activity activity) {
+    public TCPServer(Activity activity, LinkedList<Peer> peers) {
+
         this.activity = activity;
+        this.peers = peers;
     }
 
     @Override
@@ -93,41 +99,9 @@ public class TCPServer implements Runnable {
                 channel = serverSocketChannel.accept();
                 if(channel != null)
                 {
-                    Log.d(TAG, "Got incoming connection");
-                    ByteBuffer buffer = ByteBuffer.allocate(DataConst.MAX_RECEIVE_BUFFER_SIZE);
-                    int len;
-
-                    try {
-                        do {
-                            len = channel.read(buffer);
-                            Log.d(TAG, "Read this many bytes: " + len);
-                            if (len > 0) {//-1 mean it reach the end of stream
-                                buffer.flip();
-                                handleTCPPacket(buffer);
-                                Log.d(TAG, "Handed it over to handleTCPPacket");
-                                buffer.clear();
-                            } else if (len == -1) {
-                                /*
-                                Log.d(TAG,"End of data from remote server, will send FIN to client");
-                                Log.d(TAG,"End of data from remote server, will send FIN to client");
-                                Log.d(TAG,"send FIN to: " + session);
-                                sendFin(session);
-                                session.setAbortingConnection(true);
-                                 */
-                            }
-                        } while (len > 0);
-                    }catch(NotYetConnectedException e){
-                        Log.e(TAG,"socket not connected");
-                    }catch(ClosedByInterruptException e){
-                        Log.e(TAG,"ClosedByInterruptException reading SocketChannel: "+ e.getMessage());
-                    }catch(ClosedChannelException e){
-                        Log.e(TAG,"ClosedChannelException reading SocketChannel: "+ e.getMessage());
-                    } catch (IOException e) {
-                        Log.e(TAG,"Error reading data from SocketChannel: "+ e.getMessage());
-                    }
-
+                    ControlTraffic ct = new ControlTraffic(peers, channel.getRemoteAddress().toString(), channel);
+                    ct.start();
                 }
-
             }
         }
         catch(IOException e)
@@ -165,40 +139,5 @@ public class TCPServer implements Runnable {
         return stopped.get();
     }
 
-    public void handleTCPPacket(@NonNull ByteBuffer packetData)  {
-
-        byte packetType = packetData.get(); // "P", "S" "T" "L" "D" "A"
-        Log.i(TAG, "Packet Type: " + (char) packetType);
-
-        byte[] regardingComByte = new byte[6]; // which community this packet belongs to
-        byte[] regardingFingerprintByte = new byte[16]; // which device this packet belongs to
-        packetData.get(regardingComByte, 0, 6);
-        packetData.get(regardingFingerprintByte, 0, 16);
-
-        StringBuilder comStrb = new StringBuilder();
-        StringBuilder fingStrb = new StringBuilder();
-        char[] regardingCommunity = new char[6];
-        char[] regardingFingerprint = new char[16];
-        for(int i = 0; i < 6 ; i++)
-        {
-            if(regardingComByte[i] != 0x00)
-            {
-                comStrb.append((char)regardingComByte[i]);
-            }
-        }
-        for(int i = 0; i < 16 ; i++)
-        {
-            fingStrb.append((char)regardingFingerprintByte[i]);
-        }
-        Log.d(TAG, "Community: " + comStrb.toString());
-        Log.d(TAG, "Fingerprint: " + fingStrb.toString());
-
-
-
-        if(packetData.remaining() >= 36) {
-            byte[] buf = new byte[packetData.remaining()];
-            packetData.get(buf);
-        }
-    }
 
 }

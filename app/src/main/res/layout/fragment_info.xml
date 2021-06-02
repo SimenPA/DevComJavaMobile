@@ -6,12 +6,25 @@
     android:layout_height="match_parent"
     tools:context=".ui.info.InfoFragment">
 
+    <EditText
+        android:id="@+id/devicesText"
+        android:layout_width="match_parent"
+        android:layout_height="247dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:ems="10"
+        android:gravity="start|top"
+        android:inputType="textMultiLine"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/devicesTextView" />
+
     <TextView
         android:id="@+id/publicKeyTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="10dp"
         android:text="Public Key"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +35,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="10dp"
         android:text="Fingerprint"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -59,7 +72,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
         android:text="IP Address"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -94,5 +106,15 @@
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/publicKeyTextView" />
+
+    <TextView
+        android:id="@+id/devicesTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="10dp"
+        android:text="Known devices"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/copyPublicKeyTextBtn" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

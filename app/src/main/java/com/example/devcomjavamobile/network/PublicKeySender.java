@@ -74,16 +74,16 @@ public class PublicKeySender implements Runnable {
         int sequenceNumber = 0; // For order
         boolean flag; // To see if we got to the end of the file
         int ackSequence = 0; // To see if the datagram was received correctly
+        // Create message
+        byte[] message = new byte[1024]; // First two bytes of the data are for control (datagram integrity and order)
 
-        for (int i = 0; i < fileByteArray.length; i = i + 1021) {
+        for (int i = 0; i < fileByteArray.length; i = i + 1019) {
             sequenceNumber += 1;
 
             // Create message
-            byte[] message = new byte[1024]; // First two bytes of the data are for control (datagram integrity and order)
-            message[0] = (byte) (sequenceNumber >> 8);
-            message[1] = (byte) (sequenceNumber);
 
             if ((i + 1021) >= fileByteArray.length) { // Have we reached the end of file?
+                message = new byte[fileByteArray.length + 5];
                 flag = true;
                 message[2] = (byte) (1); // We reached the end of the file (last datagram to be send)
             } else {
@@ -91,10 +91,24 @@ public class PublicKeySender implements Runnable {
                 message[2] = (byte) (0); // We haven't reached the end of the file, still sending datagrams
             }
 
+            message[0] = (byte) (sequenceNumber >> 8);
+            message[1] = (byte) (sequenceNumber);
+
+            int chunkSize;
+            if(!flag) {
+                chunkSize = 1019;
+            } else {
+                chunkSize = (fileByteArray.length - i);
+            }
+            message[3] = (byte) (chunkSize >> 8); // added these two bytes to contain int with the length of the next chunk to be written
+            message[4] = (byte) (chunkSize);
+
             if (!flag) {
-                System.arraycopy(fileByteArray, i, message, 3, 1021);
+                Log.i(TAG, "This is not the last sequence");
+                System.arraycopy(fileByteArray, i, message, 5, 1019);
             } else { // If it is the last datagram
-                System.arraycopy(fileByteArray, i, message, 3, fileByteArray.length - i);
+                Log.i(TAG, "This IS the last sequence");
+                System.arraycopy(fileByteArray, i, message, 5, fileByteArray.length - i);
             }
 
             Log.i(TAG, "Sending file to " + address.toString() + "at port " + port);

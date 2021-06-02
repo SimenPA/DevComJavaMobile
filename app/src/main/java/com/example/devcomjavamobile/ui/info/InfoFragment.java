@@ -17,7 +17,9 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProviders;
 
+import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
+import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.security.Crypto;
 
 import java.io.File;
@@ -28,6 +30,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.interfaces.RSAPublicKey;
+import java.util.LinkedList;
 import java.util.Scanner;
 
 import static android.content.Context.WIFI_SERVICE;
@@ -37,7 +40,9 @@ public class InfoFragment extends Fragment {
 
     private InfoViewModel infoViewModel;
 
-    EditText ipText, fingerprintText;
+    LinkedList<Peer> peers;
+
+    EditText ipText, fingerprintText, devicesText;
 
     Button copyIpBtn, copyFingerprintBtn, copyPublicKeyButton;
 
@@ -51,6 +56,17 @@ public class InfoFragment extends Fragment {
 
         ipText = (EditText)root.findViewById(R.id.ipText);
         fingerprintText = (EditText)root.findViewById(R.id.fingerprintText);
+        devicesText = (EditText)root.findViewById(R.id.devicesText);
+
+        peers = ((MainActivity)getActivity()).getPeers();
+
+        StringBuilder peersStrb =  new StringBuilder();
+        for(Peer p : peers)
+        {
+            peersStrb.append(p.getFingerPrint());
+        }
+
+        devicesText.setText(peersStrb.toString());
 
         try {
             ipText.setText(getLocalIp());

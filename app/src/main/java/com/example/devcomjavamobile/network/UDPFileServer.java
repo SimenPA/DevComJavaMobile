@@ -3,6 +3,7 @@ package com.example.devcomjavamobile.network;
 import android.app.Activity;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.util.Xml;
 import android.widget.Toast;
 
 import com.example.devcomjavamobile.Utility;
@@ -122,17 +123,20 @@ public class UDPFileServer implements Runnable {
                     boolean flag; // Have we reached end of file
                     int sequenceNumber = 0; // Order of sequences
                     int foundLast = 0; // The las sequence found
+                    int chunkSize = 0; // Amount of bits in datagram containing file data
 
                     while (isRunning()) {
                         Log.i(TAG, "Receiving file");
                         byte[] message = new byte[1024]; // Where the data from the received datagram is stored
-                        byte[] fileByteArray = new byte[1021]; // Where we store the data to be writen to the file
+                        byte[] fileByteArray = new byte[1019]; // Where we store the data to be writen to the file
 
                         // Receive packet and retrieve the data
                         DatagramPacket receivedPacket = new DatagramPacket(message, message.length);
                         ds.receive(receivedPacket);
                         message = receivedPacket.getData(); // Data to be written to the file
                         Log.i(TAG, "Received data");
+                        String text = new String(message, "UTF-8");
+                        Log.i(TAG, "Text: " + text);
 
                         // Get port and address for sending acknowledgment
                         InetAddress address = receivedPacket.getAddress();
@@ -140,6 +144,10 @@ public class UDPFileServer implements Runnable {
 
                         // Retrieve sequence number
                         sequenceNumber = ((message[0] & 0xff) << 8) + (message[1] & 0xff);
+
+                        // Retrieve chunk size
+                        chunkSize = ((message[3] & 0xff) << 8) + (message[4] & 0xff);
+
                         // Check if we reached last datagram (end of file)
                         flag = (message[2] & 0xff) == 1;
                         Log.i(TAG, "Sequence number: " + sequenceNumber);
@@ -152,10 +160,10 @@ public class UDPFileServer implements Runnable {
                             foundLast = sequenceNumber;
 
                             // Retrieve data from message
-                            System.arraycopy(message, 3, fileByteArray, 0, 1021);
+                            System.arraycopy(message, 5, fileByteArray, 0, 1019);
 
                             // Write the retrieved data to the file and print received data sequence number
-                            outToFile.write(fileByteArray);
+                            outToFile.write(fileByteArray, 0, chunkSize);
                             Log.i(TAG, "Received: Sequence number:" + foundLast);
 
                             // Send acknowledgement

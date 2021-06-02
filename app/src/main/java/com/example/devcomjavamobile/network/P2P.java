@@ -63,8 +63,8 @@ public class P2P {
 
         Log.d(TAG, "PeersHandler has added community, supposedly");
 
-        //TODO: save cache file method
-        ControlTraffic controlTraffic = new ControlTraffic(peers, devPhysicalAddress);
+        //TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
+        ControlTraffic controlTraffic = new ControlTraffic(peers, devPhysicalAddress, null);
         controlTraffic.start();
         pHandler.addControlTraffic(devFingerPrint, controlTraffic);
 
@@ -72,8 +72,13 @@ public class P2P {
     }
 
     public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws Exception {
-        PeersHandler pHandler =  new PeersHandler(peers);
+        PeersHandler pHandler = new PeersHandler(peers);
         Peer peer = pHandler.getPeer(fingerPrint);
+        if(peer == null)
+        {
+            Log.i(TAG, "No known device with fingerprint: " + fingerPrint);
+            return;
+        }
         boolean hasPublicKey = false;
         if(peer.getPublicKey() == null) // check for public key in files if
         {
@@ -106,7 +111,6 @@ public class P2P {
             char[] payload = new char[PASSWORD_LENGTH];
             crypto.generatePassword(payload, PASSWORD_LENGTH);
             Log.d(TAG, "Session key: " + payload.toString());
-            // TODO: This is where I left off after 26.4. Method is send_control_join in control_traffic.c
             peer.setPassword(payload); // adds session key
 
             Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -115,9 +119,14 @@ public class P2P {
 
             controlPacket = RSAUtil.encrypt(controlPacket, peer.getPublicKey()); // encrypt using AES
             int signatureLength = RSAUtil.sign(controlPacket); // sign with RSA public key
+            if(signatureLength == 512)
+            {
+                Log.d(TAG, "Preparing to write control package");
+                ct.write(controlPacket);
+            } else {
+                Log.d(TAG, "Package signing failed, aborting join");
+            }
 
-            Log.d(TAG, "Preparing to write control package");
-            ct.write(controlPacket);
         } else {
             Log.i(TAG, "Public key is unknown, unable to proceed");
             activity.runOnUiThread(() -> Toast.makeText(activity, "No public key known for fingerprint: " + fingerPrint, Toast.LENGTH_SHORT).show());

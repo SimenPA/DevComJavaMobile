@@ -34,7 +34,7 @@ public class TCPFragment extends Fragment {
                 ViewModelProviders.of(this).get(TCPViewModel.class);
         View root = inflater.inflate(R.layout.fragment_tcp, container, false);
 
-        TCPServer server = new TCPServer(getActivity());
+        TCPServer server = new TCPServer(getActivity(), ((MainActivity)getActivity()).getPeers());
 
         communityText = (EditText)root.findViewById(R.id.enterComEditText);
         fingerPrintText = (EditText)root.findViewById(R.id.enterFingerPrintEditText);
@@ -42,8 +42,7 @@ public class TCPFragment extends Fragment {
 
         Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
         joinComBtn.setOnClickListener(view -> {
-            LinkedList<Peer> peers = ((MainActivity)getActivity()).getPeers();
-            P2P p2p = new P2P(peers, getActivity());
+            P2P p2p = new P2P(((MainActivity)getActivity()).getPeers(), getActivity());
             try {
                 p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());
             } catch (Exception e) {

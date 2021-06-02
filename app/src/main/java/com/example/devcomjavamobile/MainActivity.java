@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.example.devcomjavamobile.network.Peer;
+import com.example.devcomjavamobile.network.PeersHandler;
 import com.example.devcomjavamobile.network.TunnelService;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
@@ -18,7 +19,9 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.LinkedList;
+import java.util.Scanner;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -69,6 +72,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         peers = new LinkedList<>();
+        try{
+            setPeers();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -107,6 +115,36 @@ public class MainActivity extends AppCompatActivity {
         File f = new File("/data/data/com.example.devcomjavamobile/");
         String[] fileList = f.list();
         for(String file : fileList) { Log.i(TAG, file); }
+    }
+
+    public void setPeers() throws Exception {
+        Crypto c = new Crypto();
+        File f = new File("/data/data/com.example.devcomjavamobile/");
+        String[] fileList = f.list();
+        for(String file : fileList) {
+            if(file.endsWith(".pem.tramp") && !file.equals("private_key.pem.tramp") && !file.equals("public_key.pem.tramp")) {
+                Log.i(TAG, "Adding peer " + file);
+                Peer p = new Peer();
+                p.setFingerPrint(file.substring(0, file.length() - 10).toUpperCase());
+
+                StringBuilder pubKeyStringBuilder =  new StringBuilder();
+                try {
+                    File myObj = new File("/data/data/com.example.devcomjavamobile/" + file);
+                    Scanner myReader = new Scanner(myObj);
+                    while (myReader.hasNextLine()) {
+                        pubKeyStringBuilder.append(myReader.nextLine());
+                    }
+                    myReader.close();
+                } catch (FileNotFoundException e) {
+                    System.out.println("An error occurred.");
+                    e.printStackTrace();
+                }
+                Log.i(TAG, pubKeyStringBuilder.toString());
+                // p.setPublicKey(c.readPublicKey("/data/data/com.example.devcomjavamobile/" + file));
+
+                peers.add(p);
+            }
+        }
     }
 
     public LinkedList<Peer> getPeers() { return peers; }
