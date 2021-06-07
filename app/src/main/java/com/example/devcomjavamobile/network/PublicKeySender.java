@@ -95,7 +95,7 @@ public class PublicKeySender implements Runnable {
             message[1] = (byte) (sequenceNumber);
 
             int chunkSize;
-            if(!flag) {
+            if (!flag) {
                 chunkSize = 1019;
             } else {
                 chunkSize = (fileByteArray.length - i);
@@ -142,19 +142,19 @@ public class PublicKeySender implements Runnable {
                 } // Package was not received, so we resend it
                 else {
                     ttl++;
-                    if(ttl < 25)
-                    {
+                    if (ttl < 25) {
                         socket.send(sendPacket);
                         Log.i(TAG, "Resending: Sequence Number = " + sequenceNumber);
-                    }
-                    else {
+                    } else {
                         Log.i(TAG, "Transaction timed out, aborting");
                         break;
                     }
                 }
             }
+
         }
     }
+
 
     private void receiveFile(DatagramSocket socket, InetAddress address, int port) throws IOException {
         // Send ack that we want to receive the recipients public key in order for NAT to let it through

@@ -1,11 +1,13 @@
 package com.example.devcomjavamobile.ui.home;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -14,6 +16,7 @@ import androidx.lifecycle.ViewModelProviders;
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.P2P;
 import com.example.devcomjavamobile.network.PublicKeySender;
 import com.example.devcomjavamobile.network.UDPFileServer;
 import com.example.devcomjavamobile.network.UDPSender;
@@ -27,7 +30,9 @@ public class HomeFragment extends Fragment {
     private HomeViewModel homeViewModel;
     private static final String TAG = HomeFragment.class.getSimpleName();
 
-    EditText ipText, msgText;
+    Button makeTunnel, stopTunnel;
+
+    EditText communityText, fingerPrintText, addressText;
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         homeViewModel =
@@ -38,63 +43,55 @@ public class HomeFragment extends Fragment {
         UDPServer msgServer = new UDPServer(getActivity());
         UDPFileServer fileServer = new UDPFileServer(getActivity());
 
-        ipText = (EditText)root.findViewById(R.id.enterIPEditText);
-        msgText = (EditText)root.findViewById(R.id.enterComEditText);
+        addressText = (EditText)root.findViewById(R.id.enterIPEditText);
+        communityText = (EditText)root.findViewById(R.id.enterComEditText);
+        fingerPrintText = (EditText)root.findViewById(R.id.enterFingerPrintEditText);
 
-        Button sendMsgBtn = (Button) root.findViewById(R.id.sendMsgBtn);
-        sendMsgBtn.setOnClickListener(view -> {
 
-            Executor e = Executors.newCachedThreadPool();
-            UDPSender b = new UDPSender(ipText.getText().toString(), msgText.getText().toString());
-            e.execute(b);
-
-        });
-
-        Button sendPubKeyBtn = (Button) root.findViewById(R.id.sendPubKeyBtn);
-        sendPubKeyBtn.setOnClickListener(view -> {
-            String fingerPrint = "";
-            try{
-                fingerPrint = Utility.createFingerPrint();
-            } catch (Exception e)
-            {
+        Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
+        joinComBtn.setOnClickListener(view -> {
+            P2P p2p = new P2P(((MainActivity)getActivity()).getPeers(), getActivity());
+            try {
+                p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-            Executor e = Executors.newCachedThreadPool();
-            PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 1337, fingerPrint);
-            e.execute(b);
-
         });
 
-        Button makeTunnel = (Button) root.findViewById(R.id.makeTunnel);
+        makeTunnel = (Button) root.findViewById(R.id.makeTunnel);
         makeTunnel.setOnClickListener(view -> {
-            ((MainActivity)getActivity()).startTunnel();
+            if(!((MainActivity)getActivity()).isTunnelRunning())
+            {
+                ((MainActivity)getActivity()).startTunnel();
+                Toast.makeText((MainActivity)getActivity(), "Tunnel Interface has been started", Toast.LENGTH_SHORT).show();
+                makeTunnel.setTextColor(Color.GRAY);
+                stopTunnel.setTextColor(Color.BLACK);
+            } else {
+                Toast.makeText((MainActivity)getActivity(), "Tunnel Interface is already active", Toast.LENGTH_SHORT).show();
+            }
         });
 
-        Button stopTunnelBtn = (Button) root.findViewById(R.id.stopTunnel);
-        stopTunnelBtn.setOnClickListener(view -> {
-            ((MainActivity)getActivity()).stopTunnel();
+        stopTunnel = (Button) root.findViewById(R.id.stopTunnel);
+        stopTunnel.setOnClickListener(view -> {
+            if(((MainActivity)getActivity()).isTunnelRunning())
+            {
+                ((MainActivity)getActivity()).stopTunnel();
+                Toast.makeText((MainActivity)getActivity(), "Tunnel Interface has been stopped", Toast.LENGTH_SHORT).show();
+                makeTunnel.setTextColor(Color.BLACK);
+                stopTunnel.setTextColor(Color.GRAY);
+            } else {
+                Toast.makeText((MainActivity)getActivity(), "Tunnel Interface is not active", Toast.LENGTH_SHORT).show();
+            }
+
         });
 
-        Button startServerBtn = (Button) root.findViewById(R.id.startServerBtn);
-        startServerBtn.setOnClickListener(view -> {
-            msgServer.start();
-        });
-
-        Button stopServerBtn = (Button) root.findViewById(R.id.stopServerBtn);
-        stopServerBtn.setOnClickListener(view -> {
-            msgServer.interrupt();
-        });
+        if(((MainActivity)getActivity()).isTunnelRunning())
+        {
+            makeTunnel.setTextColor(Color.GRAY);
+        } else { stopTunnel.setTextColor(Color.GRAY); }
 
 
-        Button startFileServerBtn = (Button) root.findViewById(R.id.startFileServerBtn);
-        startFileServerBtn.setOnClickListener(view -> {
-            fileServer.start();
-        });
 
-        Button stopFileServerBtn = (Button) root.findViewById(R.id.stopFileServerBtn);
-        stopFileServerBtn.setOnClickListener(view -> {
-            fileServer.interrupt();
-        });
         return root;
     }
 }

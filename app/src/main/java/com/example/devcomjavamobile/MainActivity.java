@@ -4,10 +4,14 @@ import android.content.Intent;
 import android.net.VpnService;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.devcomjavamobile.network.Peer;
 import com.example.devcomjavamobile.network.PeersHandler;
+import com.example.devcomjavamobile.network.TCPServer;
 import com.example.devcomjavamobile.network.TunnelService;
+import com.example.devcomjavamobile.network.UDPFileServer;
+import com.example.devcomjavamobile.network.UDPServer;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -31,6 +35,9 @@ public class MainActivity extends AppCompatActivity {
 
     LinkedList<Peer> peers;
 
+    TCPServer tcpServer;
+    UDPFileServer udpServer;
+
     static {
         System.loadLibrary("native-lib");
     }
@@ -43,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         AppBarConfiguration appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.navigation_home, R.id.navigation_tcp, R.id.navigation_home)
+                R.id.navigation_home, R.id.navigation_transport, R.id.navigation_home)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
@@ -78,6 +85,12 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+        udpServer = new UDPFileServer(this);
+        tcpServer = new TCPServer(peers);
+
+        startTcpServer();
+        startUdpServer();
+
 
     }
     @Override
@@ -95,12 +108,72 @@ public class MainActivity extends AppCompatActivity {
         return new Intent(this, TunnelService.class);
     }
 
+    public void startTcpServer() {
+        if(!isTcpServerRunning())
+        {
+            tcpServer.start();
+            Toast.makeText(this, "TCP Server is now running", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "TCP Server is already running", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void stopTcpServer() {
+        if(isTcpServerRunning())
+        {
+            try{
+                tcpServer.interrupt();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            Toast.makeText(this, "TCP Server has now been stopped", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "TCP Server is not running", Toast.LENGTH_SHORT).show();
+        }
+
+    }
+
+    public void startUdpServer(){
+        if(!isUdpServerRunning())
+        {
+            udpServer.start();
+            Toast.makeText(this, "UDP Server is now running", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "UDP Server is already running", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void stopUdpServer() {
+        if(isUdpServerRunning())
+        {
+            udpServer.interrupt();
+            Toast.makeText(this, "UDP Server has now been stopped", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "UDP Server is not running", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public void stopTunnel() {
         startService(getServiceIntent().setAction(TunnelService.STOP_TUNNEL));
     }
 
+    public boolean isTunnelRunning() {
+        return TunnelService.isRunning();
+    }
+
+    public boolean isUdpServerRunning()
+    {
+        return udpServer.isRunning();
+    }
+
+    public boolean isTcpServerRunning()
+    {
+        return tcpServer.isRunning();
+    }
+
 
     public void startTunnel() {
+
         Intent vpnIntent = VpnService.prepare(this);
         boolean vpnNotConfigured = vpnIntent != null;
         if (vpnNotConfigured) {

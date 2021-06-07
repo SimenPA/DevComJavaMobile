@@ -12,10 +12,10 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/navigation_tcp"
-        android:name="com.example.devcomjavamobile.ui.tcp.TCPFragment"
-        android:label="@string/title_tcp"
-        tools:layout="@layout/fragment_tcp" />
+        android:id="@+id/navigation_transport"
+        android:name="com.example.devcomjavamobile.ui.transport.TransportFragment"
+        android:label="@string/title_transport"
+        tools:layout="@layout/fragment_transport" />
 
     <fragment
         android:id="@+id/navigation_info"

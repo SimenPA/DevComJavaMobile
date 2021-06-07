@@ -64,17 +64,8 @@ public class UDPFileServer implements Runnable {
             running.set(false);
             stopped.set(true);
             ds.close();
-            activity.runOnUiThread(new Runnable() {
-                public void run() {
-                    Toast.makeText(activity, "UDP File Server has stopped", Toast.LENGTH_SHORT).show();
-                }
-            });
             Log.i(TAG, "UDP File Server has stopped");
             worker.interrupt();
-        }
-        else {
-            Log.i(TAG, "UDP File server is not running");
-            Toast.makeText(activity, "UDP Server is not running", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -89,11 +80,6 @@ public class UDPFileServer implements Runnable {
         {
             ds = new DatagramSocket(port);
             ds.setReuseAddress(true);
-            activity.runOnUiThread(new Runnable() {
-                public void run() {
-                    Toast.makeText(activity, "UDP File Server has started", Toast.LENGTH_SHORT).show();
-                }
-            });
             Log.i(TAG, "UDP File Server has started");
         } catch(IOException e) {
             e.printStackTrace();
@@ -178,7 +164,7 @@ public class UDPFileServer implements Runnable {
                             Log.i(TAG, "Received last datagram, closing file and attempts to send back own key");
                             outToFile.close();
                             if(transferType.equals("K")) returnPublicKey(ds, address, port);
-                            interrupt();
+                            break;
                         }
                     }
                 }

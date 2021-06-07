@@ -68,16 +68,12 @@ public class TCPServer implements Runnable {
 
     private ByteBuffer packet = ByteBuffer.allocate(MAX_PACKET_LEN);
 
-    Activity activity;
-
     private Thread worker;
 
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public TCPServer(Activity activity, LinkedList<Peer> peers) {
-
-        this.activity = activity;
+    public TCPServer(LinkedList<Peer> peers) {
         this.peers = peers;
     }
 
@@ -93,7 +89,6 @@ public class TCPServer implements Runnable {
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.socket().bind(sockAddress);
-            activity.runOnUiThread(() -> makeText(activity, "TCP Server has started", Toast.LENGTH_SHORT).show());
             while (isRunning())
             {
                 channel = serverSocketChannel.accept();
@@ -122,12 +117,8 @@ public class TCPServer implements Runnable {
             running.set(false);
             stopped.set(true);
             serverSocketChannel.socket().close();
-            makeText(activity, "TCP Server has stopped", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "TCP Server has stopped");
             worker.interrupt();
-        }
-        else {
-            makeText(activity, "TCP Server is not running", Toast.LENGTH_SHORT).show();
         }
     }
 

@@ -30,7 +30,6 @@ import java.util.Objects;
 import static android.system.OsConstants.AF_INET;
 import static android.system.OsConstants.AF_INET6;
 
-
 public class TunnelService extends VpnService implements IProtectSocket {
 
     private final int MAX_PACKET_LEN = 1500;
@@ -43,7 +42,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
     private String fingerPrint;
     private String tunnelAddress;
 
-    private ParcelFileDescriptor tunnelInterface;
+    private static ParcelFileDescriptor tunnelInterface;
     private TunnelRunnable tunnelRunnable;
     private Thread tunnelRunnableThread;
 
@@ -53,8 +52,9 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
     public LinkedList<Peer> peers;
 
-
-
+    public static boolean isRunning() {
+        return tunnelInterface != null;
+    }
 
     public boolean isTunnelActive() {
         if(currentService == null) return false;
@@ -77,29 +77,6 @@ public class TunnelService extends VpnService implements IProtectSocket {
             e.printStackTrace();
         }
         tunnelAddress = createTunnelAddress();
-        if(Build.FINGERPRINT.equals("google/sdk_gphone_x86/generic_x86_arm:11/RSR1.200819.001/6777484:user/release-keys"))
-        {
-            // Adding Samsung s8 peer
-            Log.d(TAG, "This should be the pixel 2 emulator");
-            peers = new LinkedList<>();
-            Peer peerOne = new Peer();
-            peerOne.addCommunity("omms");
-            peerOne.addPhysicalAddress("193.157.192.58"); // Samsung s8 external IP
-            peerOne.setFingerPrint("a933:2cb3:b5cf:e60c");
-            peers.add(peerOne);
-        }
-        else
-        {
-            // Adding Pixel emulator peer
-            Log.d(TAG, "This should be any other devie");
-            peers = new LinkedList<>();
-            Peer peerOne = new Peer();
-            peerOne.addCommunity("omms");
-            peerOne.addPhysicalAddress("193.157.238.175"); // Macbook Pro/Pixel emulator external IP
-            peerOne.setFingerPrint("c775:f615:9c29:fe06");
-            peers.add(peerOne);
-        }
-        Log.i(TAG, peers.getFirst().toString());
     }
 
     @Override
@@ -137,23 +114,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
     private Boolean startTunnel() {
 
-        /*
-
-        // Coding this later if need be
-        List<ApplicationInfo> packages = getPackageManager().getInstalledApplications(PackageManager.GET_META_DATA);
-        Stream<Object> allPackageNames = packages.stream().map(pkg -> pkg.packageName);
-
-        // Basically checks whether it's running on the Android emulator called Genymotion
-        // Apparently, the whole device crashes when intercepting the whole system using
-        // genymotion, so each app needs to be explicitly allowed.
-        // I do not use Genymotion however, so I'm not sure if I need to do the same and will therefore
-        // leave it as is and intercept every app for now
-        Boolean isGenymotion = allPackageNames.any {
-            name -> name.startsWith("com.genymotion");
-        }
-         */
-
-        if(this.tunnelInterface != null) return false; // Already running
+        if(tunnelInterface != null) return false; // Already running
         ParcelFileDescriptor tunnelInterface = new Builder()
                 .addAddress(tunnelAddress, 128)
                 .allowFamily(AF_INET6)
@@ -172,8 +133,6 @@ public class TunnelService extends VpnService implements IProtectSocket {
         }
 
 
-        // BroadcastManager.sendBroadcast(blah blah blah)
-
         SocketProtector.getInstance().setProtector(this);
 
         try {
@@ -187,8 +146,6 @@ public class TunnelService extends VpnService implements IProtectSocket {
 
         tunnelRunnableThread = new Thread(tunnelRunnable, "Tunnel thread");
         tunnelRunnableThread.start();
-
-        Toast.makeText(this, "Tunnel Service has started", Toast.LENGTH_SHORT).show();
 
         return true;
     }
@@ -236,11 +193,10 @@ public class TunnelService extends VpnService implements IProtectSocket {
         stopSelf();
 
         currentService = null;
-        Toast.makeText(this, "Tunnel Service has stopped", Toast.LENGTH_SHORT).show();
     }
 
     private boolean isActive() {
-        return this.tunnelInterface != null;
+        return tunnelInterface != null;
     }
 
 
