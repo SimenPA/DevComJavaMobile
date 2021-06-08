@@ -36,7 +36,7 @@ public class UDPFileServer implements Runnable {
     }
 
     int port =  2500; // random port, just not 1337 that is used for DevCom data
-    String serverRoute = "/data/data/com.example.devcomjavamobile/";
+    String serverRoute = "/data/data/com.example.devcomjavamobile/family/";
 
     private Thread worker;
 
@@ -94,6 +94,15 @@ public class UDPFileServer implements Runnable {
                 String transferType = new String(data, 0, receiveTransferTypePacket.getLength());
 
                 if (transferType.equals("K") || transferType.equals("F")) { // K = "key", "F" = "file"
+
+                    if(transferType.equals("K"))
+                    {
+                        File familyDir = new File(serverRoute);
+                        if(!familyDir.isDirectory())
+                        {
+                            if(familyDir.mkdir()) Log.i(TAG, "Created family directory");
+                        }
+                    }
 
                     DatagramPacket receiveFileNamePacket = new DatagramPacket(receiveFileName, receiveFileName.length);
                     ds.receive(receiveFileNamePacket);

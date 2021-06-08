@@ -23,7 +23,7 @@ public class PublicKeySender implements Runnable {
     private final String TAG = PublicKeySender.class.getSimpleName();
     private final String PUBLIC_KEY_PATH = "/data/data/com.example.devcomjavamobile/public_key.pem.tramp";
 
-    String serverRoute = "/data/data/com.example.devcomjavamobile/";
+    String serverRoute = "/data/data/com.example.devcomjavamobile/family/";
 
     int port;
     String host;
@@ -181,6 +181,12 @@ public class PublicKeySender implements Runnable {
             }
             if (receivedFileName) {
                 try {
+
+                    File familyDir = new File(serverRoute);
+                    if(!familyDir.isDirectory())
+                    {
+                        if(familyDir.mkdir()) Log.i(TAG, "Created family directory");
+                    }
 
                     byte[] data = receiveFileNamePacket.getData();
                     String fileName = new String(data, 0, receiveFileNamePacket.getLength());

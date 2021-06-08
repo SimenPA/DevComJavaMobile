@@ -216,12 +216,12 @@ public class MainActivity extends AppCompatActivity {
                         Log.i(TAG, "Adding peer " + fingerPrint);
                         p = new Peer();
                         p.setFingerPrint(fingerPrint);
-                        p.setPublicKey(c.readPublicKey("/data/data/com.example.devcomjavamobile/" + file));
+                        p.setPublicKey(c.readPublicKey("/data/data/com.example.devcomjavamobile/" + community + "/" + file));
                         peers.add(p);
                     } else {
                         Log.i(TAG, "Peer " + fingerPrint + " already exists, adding community");
-                        p.addCommunity(community);
                     }
+                    p.addCommunity(community);
                 }
             }
         }

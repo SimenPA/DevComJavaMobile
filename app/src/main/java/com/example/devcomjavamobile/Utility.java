@@ -16,4 +16,22 @@ public class Utility {
         BigInteger publicModulus = pk.getModulus();
         return publicModulus.toString(16).substring(0,16).toUpperCase();
     }
+
+    public static String convertCommunityStringToHex(String str)
+    {
+        char[] ch = str.toCharArray();
+
+        StringBuilder strB =  new StringBuilder();
+        int i = 0;
+        for (char c : ch) {
+            if(i == 6) break;
+            if(i % 2 == 0 && i != 0)
+            {
+                strB.append(":");
+            }
+            strB.append(Integer.toHexString((int) c));
+            i++;
+        }
+        return strB.toString();
+    }
 }
