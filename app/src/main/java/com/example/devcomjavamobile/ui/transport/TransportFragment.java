@@ -59,7 +59,7 @@ public class TransportFragment extends Fragment {
                         e.printStackTrace();
                     }
                     Executor e = Executors.newCachedThreadPool();
-                    PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 1337, fingerPrint);
+                    PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 2500, fingerPrint);
                     e.execute(b);
                 });
 

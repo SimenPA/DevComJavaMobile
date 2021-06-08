@@ -24,6 +24,7 @@ import androidx.navigation.ui.NavigationUI;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FilenameFilter;
 import java.util.LinkedList;
 import java.util.Scanner;
 
@@ -183,39 +184,45 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    // Lists items for testings purposes. Deletes pem files outside community directories that is not part of clients key pair
     public void listItems()
     {
         File f = new File("/data/data/com.example.devcomjavamobile/");
         String[] fileList = f.list();
-        for(String file : fileList) { Log.i(TAG, file); }
+        for(String file : fileList) {
+            Log.i(TAG, file);
+            if(file.endsWith(".pem.tramp") && !file.equals("private_key.pem.tramp") && !file.equals("public_key.pem.tramp"))
+            {
+                File deleteFile = new File("/data/data/com.example.devcomjavamobile/" + file);
+                if(deleteFile.delete()) { Log.i(TAG, "Successfully deleted file " + deleteFile); }
+            }
+        }
     }
 
     public void setPeers() throws Exception {
+        PeersHandler pHandler = new PeersHandler(peers);
+
         Crypto c = new Crypto();
-        File f = new File("/data/data/com.example.devcomjavamobile/");
-        String[] fileList = f.list();
-        for(String file : fileList) {
-            if(file.endsWith(".pem.tramp") && !file.equals("private_key.pem.tramp") && !file.equals("public_key.pem.tramp")) {
-                Log.i(TAG, "Adding peer " + file);
-                Peer p = new Peer();
-                p.setFingerPrint(file.substring(0, file.length() - 10).toUpperCase());
-
-                StringBuilder pubKeyStringBuilder =  new StringBuilder();
-                try {
-                    File myObj = new File("/data/data/com.example.devcomjavamobile/" + file);
-                    Scanner myReader = new Scanner(myObj);
-                    while (myReader.hasNextLine()) {
-                        pubKeyStringBuilder.append(myReader.nextLine());
+        File appDir = new File("/data/data/com.example.devcomjavamobile/");
+        String[] directories = appDir.list((current, name) -> new File(current, name).isDirectory());
+        for(String community : directories) {
+            File dir = new File("/data/data/com.example.devcomjavamobile/" + community);
+            String[] fileList = dir.list();
+            for (String file : fileList) {
+                if (file.endsWith(".pem.tramp") && !file.equals("private_key.pem.tramp") && !file.equals("public_key.pem.tramp")) {
+                    String fingerPrint = file.substring(0, file.length() - 10).toUpperCase();
+                    Peer p = pHandler.getPeer(fingerPrint);
+                    if (p == null) {
+                        Log.i(TAG, "Adding peer " + fingerPrint);
+                        p = new Peer();
+                        p.setFingerPrint(fingerPrint);
+                        p.setPublicKey(c.readPublicKey("/data/data/com.example.devcomjavamobile/" + file));
+                        peers.add(p);
+                    } else {
+                        Log.i(TAG, "Peer " + fingerPrint + " already exists, adding community");
+                        p.addCommunity(community);
                     }
-                    myReader.close();
-                } catch (FileNotFoundException e) {
-                    System.out.println("An error occurred.");
-                    e.printStackTrace();
                 }
-                Log.i(TAG, pubKeyStringBuilder.toString());
-                // p.setPublicKey(c.readPublicKey("/data/data/com.example.devcomjavamobile/" + file));
-
-                peers.add(p);
             }
         }
     }

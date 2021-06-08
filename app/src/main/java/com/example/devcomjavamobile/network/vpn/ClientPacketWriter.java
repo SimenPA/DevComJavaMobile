@@ -75,7 +75,7 @@ public class ClientPacketWriter implements Runnable {
                     Log.e(TAG, "Error writing " + data.length + " bytes to the VPN");
                     e.printStackTrace();
 
-                    this.packetQueue.addFirst(data); // Put the data back, so it's resent
+                    this.packetQueue.addFirst(data); // Put the data back, so it's recent
                     Thread.sleep(10); // Add an arbitrary tiny pause, in case that helps
                 }
             } catch (InterruptedException e) { }

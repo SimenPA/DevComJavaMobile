@@ -56,7 +56,7 @@ public class InfoFragment extends Fragment {
 
         ipText = (EditText)root.findViewById(R.id.ipText);
         fingerprintText = (EditText)root.findViewById(R.id.fingerprintText);
-        devicesText = (EditText)root.findViewById(R.id.devicesText);
+        //devicesText = (EditText)root.findViewById(R.id.devicesText);
 
         peers = ((MainActivity)getActivity()).getPeers();
 
@@ -66,7 +66,7 @@ public class InfoFragment extends Fragment {
             peersStrb.append(p.getFingerPrint());
         }
 
-        devicesText.setText(peersStrb.toString());
+        // devicesText.setText(peersStrb.toString());
 
         try {
             ipText.setText(getLocalIp());

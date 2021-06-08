@@ -239,7 +239,6 @@ public class SessionHandler {
             session.subscribeKey(SelectionKey.OP_WRITE);
             nioService.refreshSelect(session);
         }
-
         manager.keepSessionAlive(session);
     }
 

@@ -6,19 +6,6 @@
     android:layout_height="match_parent"
     tools:context=".ui.info.InfoFragment">
 
-    <EditText
-        android:id="@+id/devicesText"
-        android:layout_width="match_parent"
-        android:layout_height="247dp"
-        android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:ems="10"
-        android:gravity="start|top"
-        android:inputType="textMultiLine"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/devicesTextView" />
-
     <TextView
         android:id="@+id/publicKeyTextView"
         android:layout_width="wrap_content"
@@ -112,10 +99,111 @@
         android:id="@+id/devicesTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="20dp"
         android:layout_marginTop="10dp"
         android:text="Known devices"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/copyPublicKeyTextBtn" />
 
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/activity_vertical_margin"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/devicesTextView"
+        tools:ignore="MissingConstraints">
+
+        <RelativeLayout
+            android:id="@+id/relLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/hei"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Some text" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView2"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/activity_vertical_margin"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView"
+        tools:ignore="MissingConstraints">
+
+        <RelativeLayout android:id="@+id/relLayout2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <TextView
+                android:id="@+id/hei2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Some text" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView3"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/activity_vertical_margin"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView2"
+        tools:ignore="MissingConstraints">
+
+        <RelativeLayout android:id="@+id/relLayout3"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <TextView
+                android:id="@+id/hei3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Some text" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardView4"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/activity_vertical_margin"
+        android:layout_marginTop="18dp"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardView3"
+        tools:ignore="MissingConstraints">
+
+        <RelativeLayout android:id="@+id/relLayout4"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            >
+
+            <TextView
+                android:id="@+id/hei4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text="Some text" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

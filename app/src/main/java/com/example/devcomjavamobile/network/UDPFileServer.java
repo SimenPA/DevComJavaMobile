@@ -35,7 +35,7 @@ public class UDPFileServer implements Runnable {
         return stopped.get();
     }
 
-    int port =  1337;
+    int port =  2500; // random port, just not 1337 that is used for DevCom data
     String serverRoute = "/data/data/com.example.devcomjavamobile/";
 
     private Thread worker;
@@ -93,7 +93,7 @@ public class UDPFileServer implements Runnable {
                 byte[] data = receiveTransferTypePacket.getData();
                 String transferType = new String(data, 0, receiveTransferTypePacket.getLength());
 
-                if (transferType.equals("K")) { // K = "key", "F" = "file"
+                if (transferType.equals("K") || transferType.equals("F")) { // K = "key", "F" = "file"
 
                     DatagramPacket receiveFileNamePacket = new DatagramPacket(receiveFileName, receiveFileName.length);
                     ds.receive(receiveFileNamePacket);
@@ -131,11 +131,12 @@ public class UDPFileServer implements Runnable {
                         // Retrieve sequence number
                         sequenceNumber = ((message[0] & 0xff) << 8) + (message[1] & 0xff);
 
+                        // Check if we reached last datagram (end of file)
+                        flag = (message[2] & 0xff) == 1;
+
                         // Retrieve chunk size
                         chunkSize = ((message[3] & 0xff) << 8) + (message[4] & 0xff);
 
-                        // Check if we reached last datagram (end of file)
-                        flag = (message[2] & 0xff) == 1;
                         Log.i(TAG, "Sequence number: " + sequenceNumber);
 
                         // If sequence number is the last seen + 1, then it is correct
