@@ -155,7 +155,6 @@ public class SessionHandler {
         //Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
 
         LinkedList<Peer> peers = MainActivity.getPeers();
-
         Log.d(TAG, "Got IPv6 package inc");
 
         String destinationIP = iPv6Header.getDestinationIPString();
@@ -170,18 +169,9 @@ public class SessionHandler {
                 if (p.getFingerPrint().equals(fingerPrint)) {
                     deviceFound = true;
                     Log.d(TAG, "Device found, trying to send");
-                    /*
-                    DatagramChannel channel;
-
-                    channel = DatagramChannel.open();
-                    channel.socket().setSoTimeout(0);
-                    channel.configureBlocking(false);
-                    SocketProtector protector = SocketProtector.getInstance();
-                    protector.protect(channel.socket());
-                    */
 
                     DatagramSocket socket = new DatagramSocket();
-                    InetAddress serverAddress = getByName(b.getPhysicalAddresses().getFirst());
+                    InetAddress serverAddress = getByName(p.getPhysicalAddresses().getFirst());
                     // SocketProtector protector = new SocketProtector();
                     // protector.protect(socket);
                     if (!socket.getBroadcast()) socket.setBroadcast(true);

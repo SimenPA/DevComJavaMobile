@@ -10,6 +10,7 @@ import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.devcom.PeersHandler;
 import com.example.devcomjavamobile.network.devcom.TCPServer;
 import com.example.devcomjavamobile.network.devcom.TunnelService;
+import com.example.devcomjavamobile.network.devcom.UDPCheckServer;
 import com.example.devcomjavamobile.network.testing.UDPFileServer;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
@@ -34,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
 
     TCPServer tcpServer;
     UDPFileServer udpServer;
+
+    UDPCheckServer udpCheckServer;
 
     static {
         System.loadLibrary("native-lib");
@@ -87,6 +90,11 @@ public class MainActivity extends AppCompatActivity {
 
         startTcpServer();
         startUdpServer();
+
+
+        udpCheckServer = new UDPCheckServer();
+
+        udpCheckServer.start();
 
 
     }

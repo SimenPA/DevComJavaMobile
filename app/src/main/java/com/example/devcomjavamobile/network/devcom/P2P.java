@@ -105,9 +105,8 @@ public class P2P {
             Log.d(TAG, "Session key: " + key.toString());
             peer.setPassword(key); // adds session key
 
-            Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            crypto.aesInit(key.toString(), encryptCipher, decryptCipher);
+            // Initliaize AES encryption
+            crypto.aesInit(key.toString(), peer);
 
             byte[] payload = new byte[32];
             for(int i = 0; i < key.length; i++)

@@ -10,6 +10,7 @@ import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.devcom.PeersHandler;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
+import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -50,8 +51,11 @@ public class DataTrafficServer implements Runnable {
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public DataTrafficServer(String physicalAddress)
+    ClientPacketWriter tunnelWriter;
+
+    public DataTrafficServer(ClientPacketWriter tunnelWriter)
     {
+        this.tunnelWriter = tunnelWriter;
         this.peers = MainActivity.getPeers();
     }
 
@@ -143,11 +147,29 @@ public class DataTrafficServer implements Runnable {
 
     }
 
-    public void handleUDPPacket(@NonNull DatagramPacket packet) throws IOException {
+    public void handleUDPPacket(@NonNull DatagramPacket packet) throws Exception {
 
         PeersHandler pHandler = new PeersHandler(peers);
         InetAddress address = packet.getAddress();
+        byte[] encryptedData = packet.getData();
 
+        Peer peer = null;
+
+        for(Peer p: peers) {
+            for(String ip: p.getPhysicalAddresses()) if(ip.equals(address.toString())) peer = p;
+        }
+
+        if(peer == null)
+        {
+            Log.d(TAG, "Received UDP message from unknown peer. Dismissing");
+            return;
+        }
+
+        Crypto c = new Crypto();
+
+        byte[] decryptedData = c.aes_decrypt(encryptedData, peer.getDecryptCipher());
+        tunnelWriter.write(decryptedData);
+        // ClientPacketWriter tunnelWriter = new ClientPacketWriter()
     }
 
     public boolean isRunning() {

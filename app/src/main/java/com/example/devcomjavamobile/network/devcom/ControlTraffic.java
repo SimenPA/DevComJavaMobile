@@ -265,6 +265,10 @@ public class ControlTraffic implements Runnable {
         }
         p.setPassword(password);
         Log.i(TAG, "Join message from device " + p.getFingerPrint() + " verified. Session has been opened.");
+
+        // Check if sender supports receiving UDP
+        UDPCheckSender udpCheckSender = new UDPCheckSender(p.getPhysicalAddresses().getFirst(), "SYN");
+        udpCheckSender.run();
     }
 
 

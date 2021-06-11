@@ -1,4 +1,4 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
 import android.util.Log;
 
@@ -9,11 +9,14 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
-public class DataTrafficSender implements Runnable {
+public class UDPCheckSender implements Runnable {
+
+    private final int DATA_TRAFFIC_PORT = 1337;
+
     String ip, msg;
     byte[] buf;
 
-    public DataTrafficSender(byte[] data, String msgIn)
+    public UDPCheckSender(String ipIn, String msgIn)
     {
         ip = ipIn;
         msg = msgIn;
@@ -27,8 +30,8 @@ public class DataTrafficSender implements Runnable {
             DatagramSocket socket = new DatagramSocket();
             if (!socket.getBroadcast()) socket.setBroadcast(true);
             DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                    serverAddress, 1337);
-            Log.i("UDPSender", "Trying to send message: " + msg);
+                    serverAddress, DATA_TRAFFIC_PORT + 1);
+            Log.i("UDP Check Sender", "Trying to UDP Check message: " + msg);
             socket.send(packet);
             socket.close();
         } catch (final UnknownHostException e) {
@@ -39,5 +42,4 @@ public class DataTrafficSender implements Runnable {
             e.printStackTrace();
         }
     }
-
 }

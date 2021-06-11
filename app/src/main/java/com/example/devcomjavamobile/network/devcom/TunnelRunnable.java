@@ -14,6 +14,7 @@ package com.example.devcomjavamobile.network.devcom;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.example.devcomjavamobile.network.DataTrafficServer;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.SessionHandler;
 import com.example.devcomjavamobile.network.vpn.SessionManager;
@@ -77,6 +78,8 @@ public class TunnelRunnable implements Runnable {
 
         dataServiceThread.start();
         tunnelPacketWriterThread.start();
+
+        DataTrafficServer dataTrafficServer = new DataTrafficServer(tunnelPacketWriter)
 
         byte[] data;
         int length = 0;

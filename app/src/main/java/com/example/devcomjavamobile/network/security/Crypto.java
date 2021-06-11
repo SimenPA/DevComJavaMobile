@@ -2,6 +2,8 @@ package com.example.devcomjavamobile.network.security;
 
 import android.util.Log;
 
+import com.example.devcomjavamobile.network.devcom.Peer;
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.File;
@@ -42,7 +44,7 @@ public class Crypto {
 
     private final String TAG = Crypto.class.getSimpleName();
 
-    public void Crypto()
+    public Crypto()
     {
         Security.addProvider(new BouncyCastleProvider());
     }
@@ -146,18 +148,6 @@ public class Crypto {
         return (RSAPublicKey) kf.generatePublic(pubKeySpec);
     }
 
-    public byte[] aes_encrypt(String data, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        return cipher.doFinal(data.getBytes());
-    }
-
-    public static String aes_decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        return new String(cipher.doFinal(data));
-    }
-
     public void testKeys() throws Exception
     {
         PrivateKey privKey = readPrivateKey(PRIVATE_KEY_PATH);
@@ -184,27 +174,15 @@ public class Crypto {
 
     }
 
-    public String aes_decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
-
-        byte[] decrypted = decryptCipher.doFinal(encryptedBytes);
-
-        return new String(decrypted);
+    public byte[] aes_decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
+        return decryptCipher.doFinal(encryptedBytes);
     }
 
-    public void testEncryption() throws Exception
-    {
-        String testString = "AES Test";
-        char[] password =  new char[16];
-        generatePassword(password, 16);
+
+    public void aesInit(String key, Peer peer) throws Exception {
+
         Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        aesInit(password.toString(), encryptCipher, decryptCipher);
-        byte[] encrypted = aes_encrypt(testString, encryptCipher);
-        String decrypted =  aes_decrypt(encrypted, decryptCipher);
-        Log.i(TAG, "Decrypted text: " + decrypted);
-    }
-
-    public void aesInit(String key, Cipher encryptCipher, Cipher decryptCipher) throws Exception {
 
         int ivSize = 16;
         byte[] iv = new byte[ivSize];
@@ -230,6 +208,10 @@ public class Crypto {
         encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
         // Decrypt cipher init.
         decryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+        peer.setEncryptCipher(encryptCipher);
+        peer.setDecryptCipher(decryptCipher);
+
     }
 
     public void generatePassword(char[] password, int length)

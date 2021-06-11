@@ -3,6 +3,9 @@ package com.example.devcomjavamobile.network.devcom;
 
 import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedList;
+
+import javax.crypto.Cipher;
+
 // Also known as routing_table in DevCom.c, but I(Simen Persch Andersen) prefer this name
 public class Peer {
 
@@ -15,6 +18,27 @@ public class Peer {
     LinkedList<String> communities;
     char[] password; // session key
     ControlTraffic controlTraffic = null; // Socket of the TCP control channel associated with this device
+    Cipher encryptCipher;
+    Cipher decryptCipher;
+
+
+    public Cipher getEncryptCipher() {
+        return encryptCipher;
+    }
+
+    public void setEncryptCipher(Cipher encryptCipher) {
+        this.encryptCipher = encryptCipher;
+    }
+
+
+    public Cipher getDecryptCipher() {
+        return decryptCipher;
+    }
+
+    public void setDecryptCipher(Cipher decryptCipher) {
+        this.decryptCipher = decryptCipher;
+    }
+
 
     public RSAPublicKey getPublicKey() {
         return rsaPublicKey;
