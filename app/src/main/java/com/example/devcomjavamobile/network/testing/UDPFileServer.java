@@ -1,10 +1,7 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.testing;
 
 import android.app.Activity;
-import android.provider.ContactsContract;
 import android.util.Log;
-import android.util.Xml;
-import android.widget.Toast;
 
 import com.example.devcomjavamobile.Utility;
 

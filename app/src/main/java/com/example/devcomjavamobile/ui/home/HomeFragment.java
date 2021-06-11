@@ -15,15 +15,9 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
-import com.example.devcomjavamobile.Utility;
-import com.example.devcomjavamobile.network.P2P;
-import com.example.devcomjavamobile.network.PublicKeySender;
-import com.example.devcomjavamobile.network.UDPFileServer;
-import com.example.devcomjavamobile.network.UDPSender;
-import com.example.devcomjavamobile.network.UDPServer;
-
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import com.example.devcomjavamobile.network.devcom.P2P;
+import com.example.devcomjavamobile.network.testing.UDPFileServer;
+import com.example.devcomjavamobile.network.testing.UDPServer;
 
 public class HomeFragment extends Fragment {
 
@@ -43,14 +37,14 @@ public class HomeFragment extends Fragment {
         UDPServer msgServer = new UDPServer(getActivity());
         UDPFileServer fileServer = new UDPFileServer(getActivity());
 
-        addressText = (EditText)root.findViewById(R.id.enterIPEditText);
+        addressText = (EditText)root.findViewById(R.id.enterAddressEditText);
         communityText = (EditText)root.findViewById(R.id.enterComEditText);
         fingerPrintText = (EditText)root.findViewById(R.id.enterFingerPrintEditText);
 
 
         Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
         joinComBtn.setOnClickListener(view -> {
-            P2P p2p = new P2P(((MainActivity)getActivity()).getPeers(), getActivity());
+            P2P p2p = new P2P(getActivity());
             try {
                 p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());
             } catch (Exception e) {

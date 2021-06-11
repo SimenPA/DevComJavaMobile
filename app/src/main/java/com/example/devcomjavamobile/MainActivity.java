@@ -6,12 +6,11 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.devcomjavamobile.network.Peer;
-import com.example.devcomjavamobile.network.PeersHandler;
-import com.example.devcomjavamobile.network.TCPServer;
-import com.example.devcomjavamobile.network.TunnelService;
-import com.example.devcomjavamobile.network.UDPFileServer;
-import com.example.devcomjavamobile.network.UDPServer;
+import com.example.devcomjavamobile.network.devcom.Peer;
+import com.example.devcomjavamobile.network.devcom.PeersHandler;
+import com.example.devcomjavamobile.network.devcom.TCPServer;
+import com.example.devcomjavamobile.network.devcom.TunnelService;
+import com.example.devcomjavamobile.network.testing.UDPFileServer;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -23,10 +22,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FilenameFilter;
 import java.util.LinkedList;
-import java.util.Scanner;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -34,7 +30,7 @@ public class MainActivity extends AppCompatActivity {
     final static int START_TUNNEL =  123;
     final static String TAG = MainActivity.class.getSimpleName();
 
-    LinkedList<Peer> peers;
+    static LinkedList<Peer> peers;
 
     TCPServer tcpServer;
     UDPFileServer udpServer;
@@ -227,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public LinkedList<Peer> getPeers() { return peers; }
+    public static LinkedList<Peer> getPeers() { return peers; }
 
     public native String stringFromJNI();
 

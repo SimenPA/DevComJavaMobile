@@ -2,27 +2,13 @@ package com.example.devcomjavamobile.network.security;
 
 import android.util.Log;
 
-import org.bouncycastle.jcajce.provider.asymmetric.RSA;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMDecryptorProvider;
-import org.bouncycastle.openssl.PEMEncryptedKeyPair;
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.AlgorithmParameters;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
@@ -37,27 +23,16 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.EncodedKeySpec;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.InvalidParameterSpecException;
-import java.security.spec.KeySpec;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
@@ -171,13 +146,13 @@ public class Crypto {
         return (RSAPublicKey) kf.generatePublic(pubKeySpec);
     }
 
-    public byte[] encrypt(String data, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+    public byte[] aes_encrypt(String data, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
         return cipher.doFinal(data.getBytes());
     }
 
-    public static String decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public static String aes_decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
         return new String(cipher.doFinal(data));
@@ -191,16 +166,16 @@ public class Crypto {
         String testString = "RSA keys test";
         Log.d(TAG, "Unencrypted: " + testString);
 
-        byte[] encrypted = encrypt(testString, pubKey);
+        byte[] encrypted = aes_encrypt(testString, pubKey);
         Log.d(TAG, "Encrypted: " + encrypted);
 
-        String decrypted = decrypt(encrypted, privKey);
+        String decrypted = aes_decrypt(encrypted, privKey);
         Log.d(TAG, "Decrypted: " + decrypted);
     }
 
 
 
-    public byte[] encrypt(String plainText, Cipher encryptCipher) throws Exception {
+    public byte[] aes_encrypt(String plainText, Cipher encryptCipher) throws Exception {
 
         byte[] clean = plainText.getBytes();
         byte[] encrypted = encryptCipher.doFinal(clean);
@@ -209,7 +184,7 @@ public class Crypto {
 
     }
 
-    public String decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
+    public String aes_decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
 
         byte[] decrypted = decryptCipher.doFinal(encryptedBytes);
 
@@ -224,8 +199,8 @@ public class Crypto {
         Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         aesInit(password.toString(), encryptCipher, decryptCipher);
-        byte[] encrypted = encrypt(testString, encryptCipher);
-        String decrypted =  decrypt(encrypted, decryptCipher);
+        byte[] encrypted = aes_encrypt(testString, encryptCipher);
+        String decrypted =  aes_decrypt(encrypted, decryptCipher);
         Log.i(TAG, "Decrypted text: " + decrypted);
     }
 

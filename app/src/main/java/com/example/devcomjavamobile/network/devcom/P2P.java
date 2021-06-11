@@ -1,4 +1,4 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
 import android.app.Activity;
 import android.util.Log;
@@ -7,31 +7,16 @@ import android.widget.Toast;
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
-import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
-import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
-import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPHeader;
-
-import org.bouncycastle.jcajce.provider.symmetric.AES;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.Socket;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Base64;
 import java.util.LinkedList;
-import java.util.Scanner;
-import java.util.concurrent.ThreadLocalRandom;
 
 import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
 
-import static com.example.devcomjavamobile.network.Peer.PASSWORD_LENGTH;
+import static com.example.devcomjavamobile.network.devcom.Peer.PASSWORD_LENGTH;
 
 public class P2P {
 
@@ -43,8 +28,8 @@ public class P2P {
     String myFingerPrint;
     Activity activity;
 
-    public P2P(LinkedList<Peer> peers, Activity activity)  {
-        this.peers = peers;
+    public P2P(Activity activity)  {
+        this.peers = MainActivity.getPeers();
         this.activity =  activity;
         try
         {
@@ -53,6 +38,10 @@ public class P2P {
         catch(Exception e)
         {
             e.printStackTrace();
+        }
+        if(peers == null)
+        {
+            Log.i(TAG, "No peers");
         }
     }
     public void joinCommunity(String community, String devFingerPrint, String devPhysicalAddress) throws Exception {
@@ -64,7 +53,7 @@ public class P2P {
         Log.d(TAG, "PeersHandler has added community, supposedly");
 
         //TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
-        ControlTraffic controlTraffic = new ControlTraffic(peers, devPhysicalAddress, null);
+        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null);
         controlTraffic.start();
         pHandler.addControlTraffic(devFingerPrint, controlTraffic);
 
@@ -99,33 +88,44 @@ public class P2P {
         if(hasPublicKey) {
             Crypto crypto = new Crypto();
 
-            peer.setUdp(0);
+            peer.setUdp(0); // Not sure why this is necessary, but it is done in the DevCom C
+
             // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
             byte[] controlPacket = new byte[2071];
             Log.d(TAG, "My fingerprint: " + myFingerPrint);
+            Log.i(TAG, "Community: " + commmunity);
             newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
 
             byte packetType = controlPacket[0]; // "J", "P", "S" "T" "L" "D" "A"
             Log.i(TAG, "Packet Type: " + (char) packetType);
 
-            char[] payload = new char[PASSWORD_LENGTH];
-            crypto.generatePassword(payload, PASSWORD_LENGTH);
-            Log.d(TAG, "Session key: " + payload.toString());
-            peer.setPassword(payload); // adds session key
+
+            char[] key = new char[PASSWORD_LENGTH];
+            crypto.generatePassword(key, PASSWORD_LENGTH);
+            Log.d(TAG, "Session key: " + key.toString());
+            peer.setPassword(key); // adds session key
 
             Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
             Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            crypto.aesInit(payload.toString(), encryptCipher, decryptCipher);
+            crypto.aesInit(key.toString(), encryptCipher, decryptCipher);
 
-            controlPacket = RSAUtil.encrypt(controlPacket, peer.getPublicKey()); // encrypt using AES
-            int signatureLength = RSAUtil.sign(controlPacket); // sign with RSA public key
-            if(signatureLength == 512)
+            byte[] payload = new byte[32];
+            for(int i = 0; i < key.length; i++)
+                payload[i] = (byte) key[i];
+
+            boolean successfulEncryption = RSAUtil.encrypt(controlPacket, payload, peer.getPublicKey()); // encrypt using RSA
+            if(successfulEncryption)
             {
-                Log.d(TAG, "Preparing to write control package");
-                ct.write(controlPacket);
-            } else {
-                Log.d(TAG, "Package signing failed, aborting join");
-            }
+                int signatureLength = RSAUtil.sign(controlPacket); // sign with RSA public key
+                if(signatureLength == 512)
+                {
+                    Log.d(TAG, "Preparing to write control package");
+                    ct.write(controlPacket);
+                } else {
+                    Log.e(TAG, "Package signing failed, aborting join");
+                }
+            } else { Log.e(TAG,"Encryption failed, aborting join"); }
+
 
         } else {
             Log.i(TAG, "Public key is unknown, unable to proceed");
@@ -138,8 +138,7 @@ public class P2P {
 
     }
 
-    public void newControlPacket(byte[] controlPacket, char type, String community, String fingerPrint)
-    {
+    public void newControlPacket(byte[] controlPacket, char type, String community, String fingerPrint) {
         controlPacket[0] = (byte)type;
         int i = 1;
         for(char c : community.toCharArray())
@@ -159,13 +158,11 @@ public class P2P {
 
     public String createFingerprint() throws Exception {
 
-
         Crypto c = new Crypto();
 
         RSAPublicKey pk = c.readPublicKey(PUBLIC_KEY_PATH);
         BigInteger publicModulus = pk.getModulus();
         return publicModulus.toString(16).substring(0,16).toUpperCase();
-
     }
 
     public native char[] control_packet_encrypt(char[] packet, char[] payload, String key_pair);

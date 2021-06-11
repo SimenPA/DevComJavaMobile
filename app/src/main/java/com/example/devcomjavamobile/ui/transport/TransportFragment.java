@@ -15,9 +15,8 @@ import androidx.lifecycle.ViewModelProviders;
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.Utility;
-import com.example.devcomjavamobile.network.PublicKeySender;
-import com.example.devcomjavamobile.network.TCPServer;
-import com.example.devcomjavamobile.network.UDPSender;
+import com.example.devcomjavamobile.network.testing.PublicKeySender;
+import com.example.devcomjavamobile.network.testing.UDPSender;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -34,12 +33,31 @@ public class TransportFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
 
+
+
+
+
+
         TransportViewModel =
                 ViewModelProviders.of(this).get(TransportViewModel.class);
         View root = inflater.inflate(R.layout.fragment_transport, container, false);
 
         ipText = (EditText)root.findViewById(R.id.enterIPEditText);
         msgText = (EditText)root.findViewById(R.id.enterMsgEditText);
+
+        String newString;
+        if (savedInstanceState == null) {
+            Bundle extras = getActivity().getIntent().getExtras();
+            if(extras == null) {
+                newString = null;
+            } else {
+                newString = extras.getString("ipv6String");
+            }
+        } else {
+            newString= (String) savedInstanceState.getSerializable("ipv6String");
+        }
+
+        ipText.setText(newString);
 
         Button sendMsgBtn = (Button) root.findViewById(R.id.sendMsgBtn);
         sendMsgBtn.setOnClickListener(view -> {

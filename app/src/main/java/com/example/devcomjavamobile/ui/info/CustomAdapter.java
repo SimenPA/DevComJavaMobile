@@ -1,22 +1,27 @@
 package com.example.devcomjavamobile.ui.info;
 
+import android.app.Activity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.cardview.widget.CardView;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.Utility;
-import com.example.devcomjavamobile.network.P2P;
 
 public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder> {
 
     private String[] devices;
     private String[] communities;
+    private Activity activity;
+
+    private final String TAG = CustomAdapter.class.getSimpleName();
 
     /**
      * Provide a reference to the type of views that you are using
@@ -28,6 +33,7 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         private final TextView communityTextView;
 
         private final CardView cardView;
+
 
         public ViewHolder(View view) {
             super(view);
@@ -54,9 +60,10 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
      * @param devices String[] containing the data to populate views to be used
      * by RecyclerView.
      */
-    public CustomAdapter(String[] devices, String[] communities) {
+    public CustomAdapter(String[] devices, String[] communities, Activity activity) {
         this.devices = devices;
         this.communities = communities;
+        this.activity =  activity;
     }
 
     // Create new views (invoked by the layout manager)
@@ -80,11 +87,12 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         viewHolder.getConnectedStatusTextView().setText("DISCONNECTED");
 
         viewHolder.getCardView().setOnClickListener(view -> {
-            String ipv6Address;
+            String ipv6Address = Utility.generateIpv6Address(viewHolder.getCommunityTextView().getText().toString(), viewHolder.getTextView().getText().toString());
+            NavController navController = Navigation.findNavController(view);
+            navController.navigate(R.id.navigation_transport);
+            Log.i(TAG, "IPv6 address: " + ipv6Address);
+            activity.getIntent().putExtra("ipv6String", ipv6Address);
 
-            String communityHex = Utility.convertCommunityStringToHex(viewHolder.getCommunityTextView().getText().toString());
-
-            ipv6Address = "fe80:"
         });
     }
 

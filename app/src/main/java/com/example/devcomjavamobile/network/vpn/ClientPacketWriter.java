@@ -18,18 +18,10 @@ package com.example.devcomjavamobile.network.vpn;
 
 import android.util.Log;
 
-import com.example.devcomjavamobile.network.TunnelRunnable;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.AsynchronousFileChannel;
-import java.nio.channels.Selector;
-import java.util.Queue;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**

@@ -1,11 +1,6 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
 
-import android.icu.number.CompactNotation;
-import android.os.ParcelFileDescriptor;
-import android.service.controls.Control;
-
-import java.net.Socket;
 import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedList;
 // Also known as routing_table in DevCom.c, but I(Simen Persch Andersen) prefer this name

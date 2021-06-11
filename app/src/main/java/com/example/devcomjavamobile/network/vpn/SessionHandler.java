@@ -28,7 +28,8 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.example.devcomjavamobile.network.Peer;
+import com.example.devcomjavamobile.MainActivity;
+import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
@@ -43,6 +44,7 @@ import com.example.devcomjavamobile.network.vpn.transport.udp.UDPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.util.PacketUtil;
 
 import androidx.annotation.NonNull;
+
 import android.util.Log;
 
 import static java.net.InetAddress.*;
@@ -68,13 +70,14 @@ public class SessionHandler {
 
     private final ExecutorService pingThreadpool;
 
-    private LinkedList<Peer> peers;
 
-    public SessionHandler(SessionManager manager, SocketNIODataService nioService, ClientPacketWriter writer, LinkedList<Peer> peers) {
+    public SessionHandler(SessionManager manager, SocketNIODataService nioService, ClientPacketWriter writer) {
         this.manager = manager;
         this.nioService = nioService;
         this.writer = writer;
-        this.peers = peers;
+
+        // Checking if peers actually have peers hers
+
 
         // Pool of threads to synchronously proxy ICMP ping requests in the background. We need to
         // carefully limit these, or a ping flood can cause us big big problems.
@@ -151,16 +154,20 @@ public class SessionHandler {
         //Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
         //Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
 
+        LinkedList<Peer> peers = MainActivity.getPeers();
+
         Log.d(TAG, "Got IPv6 package inc");
 
         String destinationIP = iPv6Header.getDestinationIPString();
         if(destinationIP.substring(0, 4).equals("fe80")) // Link-local
         {
             Log.d(TAG, "This IPv6 package is link-local(fe80)");
-            String fingerPrint = destinationIP.substring(20, 39);
+            String fingerPrint = destinationIP.substring(20, 39).replace(":", "").toUpperCase();
+            Log.d(TAG, "Fingerprint: " + fingerPrint);
             boolean deviceFound = false;
-            for(Peer b : peers) {
-                if (b.getFingerPrint().equals(fingerPrint)) {
+            for(Peer p : peers) {
+                Log.d(TAG, "Checking in peer if fingerprint matches");
+                if (p.getFingerPrint().equals(fingerPrint)) {
                     deviceFound = true;
                     Log.d(TAG, "Device found, trying to send");
                     /*
@@ -182,7 +189,7 @@ public class SessionHandler {
                     clientPacketData.get(buf);
                     DatagramPacket packet = new DatagramPacket(buf, buf.length,
                             serverAddress, 1337);
-                    Log.i(TAG, "Trying to forward message to " + b.getFingerPrint() + " which has the IPv4 address " + serverAddress.toString());
+                    Log.i(TAG, "Trying to forward message to " + p.getFingerPrint() + " which has the IPv4 address " + serverAddress.toString());
                     socket.send(packet);
                     socket.close();
 

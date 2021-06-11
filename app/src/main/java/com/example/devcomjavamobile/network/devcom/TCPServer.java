@@ -1,49 +1,18 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
-import android.app.Activity;
-import android.os.Looper;
 import android.util.Log;
-import android.widget.Toast;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedByInterruptException;
-import java.nio.channels.ClosedChannelException;
-import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import android.os.Handler;
-
-import androidx.annotation.NonNull;
-
-import com.example.devcomjavamobile.MainActivity;
-import com.example.devcomjavamobile.network.security.RSAUtil;
-import com.example.devcomjavamobile.network.vpn.Session;
-import com.example.devcomjavamobile.network.vpn.socket.DataConst;
-import com.example.devcomjavamobile.network.vpn.transport.PacketHeaderException;
-import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
-import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
-import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPHeader;
-import com.example.devcomjavamobile.network.vpn.transport.tcp.TCPPacketFactory;
-import com.example.devcomjavamobile.network.vpn.util.PacketUtil;
 
 import static android.widget.Toast.makeText;
 
@@ -94,7 +63,7 @@ public class TCPServer implements Runnable {
                 channel = serverSocketChannel.accept();
                 if(channel != null)
                 {
-                    ControlTraffic ct = new ControlTraffic(peers, channel.getRemoteAddress().toString(), channel);
+                    ControlTraffic ct = new ControlTraffic(channel.getRemoteAddress().toString(), channel);
                     ct.start();
                 }
             }

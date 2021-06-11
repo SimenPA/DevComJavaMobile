@@ -1,27 +1,21 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
-import android.app.Activity;
-import android.content.Context;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
+import com.example.devcomjavamobile.MainActivity;
+import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.socket.DataConst;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
@@ -37,6 +31,8 @@ import static android.widget.Toast.makeText;
 public class ControlTraffic implements Runnable {
 
     public final String TAG = ControlTraffic.class.getSimpleName();
+
+    private final String PRIVATE_KEY_PATH = "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
 
     private final BlockingDeque<byte[]> packetQueue = new LinkedBlockingDeque<>();
 
@@ -55,10 +51,10 @@ public class ControlTraffic implements Runnable {
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public ControlTraffic(LinkedList<Peer> peers, String physicalAddress, SocketChannel channel)
+    public ControlTraffic(String physicalAddress, SocketChannel channel)
     {
         this.socketChannel =  channel;
-        this.peers = peers;
+        this.peers = MainActivity.getPeers();
         this.physicalAddress =  physicalAddress;
     }
 
@@ -76,11 +72,11 @@ public class ControlTraffic implements Runnable {
             running.set(false);
             stopped.set(true);
             if(sock != null) sock.close();
-            Log.v(TAG, "TCP Control Socket has been opened for physical address: " + physicalAddress);
+            Log.v(TAG, "TCP Control Socket has been closed for physical address: " + physicalAddress);
             worker.interrupt();
         }
         else {
-            Log.v(TAG, "TCP Control Socket has been opened for physical address: " + physicalAddress);
+            Log.v(TAG, "There is no TCP Control Socket open for physical address: " + physicalAddress);
         }
     }
 
@@ -98,47 +94,73 @@ public class ControlTraffic implements Runnable {
                 e.printStackTrace();
             }
         }
-
         if(socketChannel != null)
         {
+            try
+            {
+                socketChannel.configureBlocking(false);
+            } catch(IOException e)
+            {
+                e.printStackTrace();
+            }
             while (this.isRunning()) {
-                Log.d(TAG, "Got incoming connection");
+                Log.d(TAG, "Socket channel opened");
                 ByteBuffer buffer = ByteBuffer.allocate(DataConst.MAX_RECEIVE_BUFFER_SIZE);
                 int len;
 
                 try {
                     do {
                         len = socketChannel.read(buffer);
-                        Log.d(TAG, "Read this many bytes: " + len);
-                        if (len > 0) {//-1 mean it reach the end of stream
+                        if (len > 0) {
+                            if(len < 2071) {// sometimes doesn't read all bytes from stream, typically 1448 bytes. Read the rest of the bytes if there are any.
+                                while(len < 2071)
+                                    len = len + socketChannel.read(buffer);
+                            }
+                            Log.d(TAG, "Read this many bytes: " + len);
                             buffer.flip();
                             handleTCPPacket(buffer, socketChannel);
                             Log.d(TAG, "Handed it over to handleTCPPacket");
                             buffer.clear();
-                        } else if (len == -1) {
+                        } else if (len == 0) {
                             try {
+                                if(!packetQueue.isEmpty())
+                                {
                                 byte[] data = this.packetQueue.take();
-                                try {
-                                    this.socketChannel.write(ByteBuffer.wrap(data));
-                                    Log.d(TAG, "Sent " + data.length + " bytes");
-                                } catch (IOException e) {
-                                    Log.e(TAG, "Error writing " + data.length + " bytes over control channel");
-                                    e.printStackTrace();
+                                    try {
+                                        this.socketChannel.write(ByteBuffer.wrap(data));
+                                        Log.d(TAG, "Sent " + data.length + " bytes");
+                                    } catch (IOException e) {
+                                        Log.e(TAG, "Error writing " + data.length + " bytes over control channel");
+                                        e.printStackTrace();
 
-                                    this.packetQueue.addFirst(data); // Put the data back, so it's recent
-                                    Thread.sleep(10); // Add an arbitrary tiny pause, in case that helps
+                                        this.packetQueue.addFirst(data); // Put the data back, so it's recent
+                                        Thread.sleep(10); // Add an arbitrary tiny pause, in case that helps
+                                    }
                                 }
+
                             }
                             catch (InterruptedException e) {
                             }
                         }
-                    } while (len > 0);
+                        else if (len < 0) { // length -1 means end of stream has been reached, i.e. connection closed on other end
+                            try {
+                                this.interrupt();
+                            } catch (IOException ioException) {
+                                ioException.printStackTrace();
+                            }
+                        }
+                    } while (this.isRunning());
                 }catch(NotYetConnectedException e){
-                    Log.e(TAG,"socket not connected");
+                    Log.e(TAG,"Socket not connected");
                 }catch(ClosedByInterruptException e){
                     Log.e(TAG,"ClosedByInterruptException reading SocketChannel: "+ e.getMessage());
                 }catch(ClosedChannelException e){
                     Log.e(TAG,"ClosedChannelException reading SocketChannel: "+ e.getMessage());
+                    try {
+                        this.interrupt();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
                 } catch (IOException e) {
                     Log.e(TAG,"Error reading data from SocketChannel: "+ e.getMessage());
                 }
@@ -172,19 +194,18 @@ public class ControlTraffic implements Runnable {
         PeersHandler pHandler = new PeersHandler(peers);
 
         byte[] buf = new byte[packetData.remaining()];
+        packetData.get(buf);
 
-        byte packetType = buf[0];
+        char packetType = (char)buf[0];
 
         byte[] regardingComByte = new byte[6]; // which community this packet belongs to
         byte[] regardingFingerprintByte = new byte[16]; // which device this packet belongs to
 
         System.arraycopy(buf, 1, regardingComByte, 0, 6);
-        System.arraycopy(buf, 7, regardingComByte, 0, 16);
+        System.arraycopy(buf, 7, regardingFingerprintByte, 0, 16);
 
         StringBuilder comStrb = new StringBuilder();
         StringBuilder fingStrb = new StringBuilder();
-        char[] regardingCommunity = new char[6];
-        char[] regardingFingerprint = new char[16];
         for(int i = 0; i < 6 ; i++)
         {
             if(regardingComByte[i] != 0x00)
@@ -198,18 +219,78 @@ public class ControlTraffic implements Runnable {
         }
         Log.d(TAG, "Community: " + comStrb.toString());
         Log.d(TAG, "Fingerprint: " + fingStrb.toString());
-        boolean verified = false;
-        try {
-            verified = RSAUtil.verify(buf, pHandler.getPeer(fingStrb.toString()).getPublicKey());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        if(verified){
-            pHandler.getPeer(fingStrb.toString()).setControlTraffic(this);
+        Peer p = pHandler.getPeer(fingStrb.toString());
+        if(p != null) {
+            boolean verified = false;
+            try {
+                verified = RSAUtil.verify(buf, p.getPublicKey());
+                if (verified) {
+
+                    if(packetType == 'J') { // J = join
+                        handleControlJoin(buf, channel, p);
+                    } else if(packetType == 'P') { // P = packet, i.e. data packet that is normally sent over UDP with TCP as fallback
+                        handleControlPacket(buf, channel, p);
+                    }
+
+                } else {
+                    Log.i(TAG, "Couldn't verify peer signature, closing connnection");
+                    this.interrupt();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } else {
-            Log.i(TAG, "Couldn't verify peer signature, closing connnection");
-            channel.close();
+            Log.i(TAG, "Device with fingerprint " + fingStrb.toString() + " is unknown, closing connection");
+            this.interrupt();
         }
+    }
+
+    public void handleControlJoin(byte[] data, SocketChannel channel, Peer p) throws Exception
+    {
+
+        Crypto c = new Crypto();
+        p.setControlTraffic(this);
+
+        byte[] encryptedPayload = new byte[1536];
+        System.arraycopy(data, 23, encryptedPayload,0,1536);
+
+        byte[] payLoad = RSAUtil.decrypt(encryptedPayload, c.readPrivateKey(PRIVATE_KEY_PATH));
+
+        byte[] passwordBytes = new byte[32];
+        System.arraycopy(payLoad,0, passwordBytes, 0, 32);
+
+        char[] password = new char[32];
+        for(int i = 0; i < passwordBytes.length; i++) {
+            password[i] = (char)passwordBytes[i];
+        }
+        p.setPassword(password);
+        Log.i(TAG, "Join message from device " + p.getFingerPrint() + " verified. Session has been opened.");
+    }
+
+
+    public void handleControlPacket(byte[] data, SocketChannel channel, Peer p) throws Exception {
+
+        // Handling this later
+        /*
+        Crypto c = new Crypto();
+
+        byte[] encryptedPayload = new byte[1536];
+        System.arraycopy(data, 23, encryptedPayload,0,1536);
+
+        byte[] payLoad = RSAUtil.decrypt(encryptedPayload, c.readPrivateKey(PRIVATE_KEY_PATH));
+
+        byte[] passwordBytes = new byte[32];
+        System.arraycopy((payLoad,0, passwordBytes, 0, 32);
+
+        char[] password = new char[32];
+        for(int i = 0; i < passwordBytes.length; i++) {
+            password[i] = (char)passwordBytes[i];
+        }
+        p.setPassword(password);
+        Log.i(TAG, "Join message from device " + p.getFingerPrint() + " verified. Session has been opened.");
+
+         */
+
     }
 
     public boolean isRunning() {

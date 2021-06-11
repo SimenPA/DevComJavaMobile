@@ -1,6 +1,5 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
-import java.net.Socket;
 import java.util.LinkedList;
 
 public class PeersHandler {

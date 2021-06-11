@@ -22,7 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
-import com.example.devcomjavamobile.network.Peer;
+import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.security.Crypto;
 
 import java.io.File;
@@ -131,7 +131,7 @@ public class InfoFragment extends Fragment {
 
         //String[] peersStringTable = new String[10];
         // for(int i = 0; i < peersStringTable.length; i++) { peersStringTable[i] = "Nummer " + i; }
-        mAdapter = new CustomAdapter(peersStringTable, communitiesStringTable);
+        mAdapter = new CustomAdapter(peersStringTable, communitiesStringTable, getActivity());
 
         // Set CustomAdapter as the adapter for RecyclerView.
         mRecyclerView.setAdapter(mAdapter);

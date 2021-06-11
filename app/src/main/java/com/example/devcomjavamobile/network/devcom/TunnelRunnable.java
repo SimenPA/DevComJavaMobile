@@ -9,7 +9,7 @@
  */
 
 
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
@@ -60,7 +60,7 @@ public class TunnelRunnable implements Runnable {
         nioService = new SocketNIODataService(tunnelPacketWriter);
         dataServiceThread = new Thread(nioService, "Socket NIO thread");
         manager = new SessionManager();
-        handler = new SessionHandler(manager, nioService, tunnelPacketWriter, peers);
+        handler = new SessionHandler(manager, nioService, tunnelPacketWriter);
     }
 
     // Allocate the buffer for a single packet.

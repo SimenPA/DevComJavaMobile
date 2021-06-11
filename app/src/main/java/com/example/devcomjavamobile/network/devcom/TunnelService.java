@@ -8,16 +8,14 @@
  * TODO: Find out about licensing and include this here
  */
 
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.devcom;
 
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.net.VpnService;
-import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.devcomjavamobile.Utility;
 import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
@@ -27,7 +25,6 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Objects;
 
-import static android.system.OsConstants.AF_INET;
 import static android.system.OsConstants.AF_INET6;
 
 public class TunnelService extends VpnService implements IProtectSocket {
@@ -51,6 +48,7 @@ public class TunnelService extends VpnService implements IProtectSocket {
     private PendingIntent mConfigureIntent;
 
     public LinkedList<Peer> peers;
+
 
     public static boolean isRunning() {
         return tunnelInterface != null;

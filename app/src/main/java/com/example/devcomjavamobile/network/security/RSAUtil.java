@@ -2,6 +2,9 @@ package com.example.devcomjavamobile.network.security;
 
 import android.util.Log;
 
+import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.devcom.P2P;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -15,9 +18,6 @@ import java.util.Base64;
 
 public class RSAUtil {
     private static String TAG = RSAUtil.class.getSimpleName();
-
-    private static String publicKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCgFGVfrY4jQSoZQWWygZ83roKXWD4YeT2x2p41dGkPixe73rT2IW04glagN2vgoZoHuOPqa5and6kAmK2ujmCHu6D1auJhE2tXP+yLkpSiYMQucDKmCsWMnW9XlC5K7OSL77TXXcfvTvyZcjObEz6LIBRzs6+FqpFbUO9SJEfh6wIDAQAB";
-    private static String privateKey = "MIICdQIBADANBgkqhkiG9w0BAQEFAASCAl8wggJbAgEAAoGBAKAUZV+tjiNBKhlBZbKBnzeugpdYPhh5PbHanjV0aQ+LF7vetPYhbTiCVqA3a+Chmge44+prlqd3qQCYra6OYIe7oPVq4mETa1c/7IuSlKJgxC5wMqYKxYydb1eULkrs5IvvtNddx+9O/JlyM5sTPosgFHOzr4WqkVtQ71IkR+HrAgMBAAECgYAkQLo8kteP0GAyXAcmCAkA2Tql/8wASuTX9ITD4lsws/VqDKO64hMUKyBnJGX/91kkypCDNF5oCsdxZSJgV8owViYWZPnbvEcNqLtqgs7nj1UHuX9S5yYIPGN/mHL6OJJ7sosOd6rqdpg6JRRkAKUV+tmN/7Gh0+GFXM+ug6mgwQJBAO9/+CWpCAVoGxCA+YsTMb82fTOmGYMkZOAfQsvIV2v6DC8eJrSa+c0yCOTa3tirlCkhBfB08f8U2iEPS+Gu3bECQQCrG7O0gYmFL2RX1O+37ovyyHTbst4s4xbLW4jLzbSoimL235lCdIC+fllEEP96wPAiqo6dzmdH8KsGmVozsVRbAkB0ME8AZjp/9Pt8TDXD5LHzo8mlruUdnCBcIo5TMoRG2+3hRe1dHPonNCjgbdZCoyqjsWOiPfnQ2Brigvs7J4xhAkBGRiZUKC92x7QKbqXVgN9xYuq7oIanIM0nz/wq190uq0dh5Qtow7hshC/dSK3kmIEHe8z++tpoLWvQVgM538apAkBoSNfaTkDZhFavuiVl6L8cWCoDcJBItip8wKQhXwHp0O3HLg10OEd14M58ooNfpgt+8D8/8/2OOFaR0HzA+2Dm";
 
     private static String PRIVATE_KEY_PATH = "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
     private static String PUBLIC_KEY_PATH = "/data/data/com.example.devcomjavamobile/public_key.pem.tramp";
@@ -60,39 +60,50 @@ public class RSAUtil {
         return cipher.doFinal(data.getBytes());
     }
 
-    public static byte[] encrypt(byte[] data, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+    public static boolean encrypt(byte[] controlPacket, byte[] payload, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        return cipher.doFinal(data);
-    }
 
-    public static String decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        return new String(cipher.doFinal(data));
-    }
-
-    public static String decrypt(String data, String base64PrivateKey) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
-        return decrypt(Base64.getDecoder().decode(data.getBytes()), getPrivateKey(base64PrivateKey));
-    }
-
-    public static void main(String[] args) throws IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, BadPaddingException {
-        try {
-            String encryptedString = Base64.getEncoder().encodeToString(encrypt("Dhiraj is the author", publicKey));
-            System.out.println(encryptedString);
-            String decryptedString = RSAUtil.decrypt(encryptedString, privateKey);
-            System.out.println(decryptedString);
-        } catch (NoSuchAlgorithmException e) {
-            System.err.println(e.getMessage());
+        byte[] newPayload =  new byte[1500];
+        if(payload.length <= 1500)
+        {
+            System.arraycopy(payload, 0, newPayload, 0, payload.length);
+        } else {
+            Log.e(TAG, "Payload length is longer than the maximum allowed 1500 bytes");
+            return false;
         }
 
+
+        for(int i = 0; i < 3; i++)
+        {
+            byte[] toEncrypt =  new byte[500];
+            System.arraycopy(newPayload,(i * 500), toEncrypt, 0, 500); // - 12 due to PKCS1 Padding
+            System.arraycopy(cipher.doFinal(toEncrypt), 0, controlPacket, (i*512) + 23, 512); // Destintation (i * 512) + 23 due to encryption leaving 512 bytes and to skip the 23 byte header in control packet
+        }
+        return true;
+    }
+
+    public static byte[] decrypt(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        byte[] decryptedPacket = new byte[data.length];
+        for(int i = 0; i < data.length / 500; i++)
+        {
+            byte[] toDecrypt =  new byte[512];
+            System.arraycopy(data,(i * 512) + 23, toDecrypt, 0, 512);
+            System.arraycopy(cipher.doFinal(toDecrypt), 0, decryptedPacket, (i*512), 512);
+        }
+
+        return data;
     }
 
     public static int sign(byte[] controlPacket) throws Exception {
         Crypto c = new Crypto();
 
         byte[] data = new byte[1559];
-        System.arraycopy(data, 0, controlPacket, 0, data.length);
+
+        System.arraycopy(controlPacket, 0, data, 0, data.length);
         Signature privateSignature = Signature.getInstance("SHA256withRSA");
         privateSignature.initSign(c.readPrivateKey(PRIVATE_KEY_PATH));
         privateSignature.update(data);
@@ -118,15 +129,19 @@ public class RSAUtil {
 
     public static void testSignAndVerify() throws Exception
     {
-        String testString = "Sign and verify test";
+        P2P p2p = new P2P(null);
+        byte[] data = new byte[2071];
+
+        String testString = "Sign/verify test string";
+
+        p2p.newControlPacket(data, 'J', "family", Utility.createFingerPrint());
         byte[] testStringBytes = testString.getBytes();
 
-        byte[] data = new byte[2071];
-        System.arraycopy(testStringBytes, 0, data, 0, testStringBytes.length);
+        System.arraycopy(testStringBytes, 0, data, 23, testStringBytes.length);
         int signatureLength = sign(data);
         Log.i(TAG, "Signature length: " + signatureLength);
         Crypto c = new Crypto();
         RSAPublicKey publicKey = c.readPublicKey(PUBLIC_KEY_PATH);
-        if(verify(data,publicKey)) { Log.i(TAG, "Sign/verify test successful"); } else { Log.i(TAG, "Sign/verify test unsuccessful"); }
+        if(verify(data,publicKey)) { Log.i(TAG, "Sign/verify test successful"); } else { Log.i(TAG, "Sign/verify test failed"); }
     }
 }

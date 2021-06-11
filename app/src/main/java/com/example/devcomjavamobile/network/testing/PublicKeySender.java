@@ -1,4 +1,4 @@
-package com.example.devcomjavamobile.network;
+package com.example.devcomjavamobile.network.testing;
 
 import android.util.Log;
 

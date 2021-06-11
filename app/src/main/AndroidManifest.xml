@@ -26,7 +26,7 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".network.TunnelService"
+        <service android:name=".network.devcom.TunnelService"
             android:permission="android.permission.BIND_VPN_SERVICE">
             <intent-filter>
                 <action android:name="android.net.VpnService"/>
