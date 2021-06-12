@@ -38,11 +38,11 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
-    private final String PRIVATE_KEY_PATH =  "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
-    private final String PUBLIC_KEY_PATH = "/data/data/com.example.devcomjavamobile/public_key.pem.tramp";
+    private final static String PRIVATE_KEY_PATH =  "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
+    private final static String PUBLIC_KEY_PATH = "/data/data/com.example.devcomjavamobile/public_key.pem.tramp";
     private final int KEY_SIZE =  4096;
 
-    private final String TAG = Crypto.class.getSimpleName();
+    private final static String TAG = Crypto.class.getSimpleName();
 
     public Crypto()
     {
@@ -51,7 +51,7 @@ public class Crypto {
 
 
 
-    public void genKeyPair() throws Exception
+    public static void genKeyPair() throws Exception
     {
 
         boolean privKeyExists = false;
@@ -87,11 +87,9 @@ public class Crypto {
         } else {
             Log.d(TAG, "Key pair already exists, not creating new ones");
         }
-
-        testKeys();
     }
 
-    private  KeyPair generateRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
+    private static KeyPair generateRSAKeyPair() throws NoSuchAlgorithmException, NoSuchProviderException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
         keyGen.initialize(4096);
 
@@ -100,14 +98,14 @@ public class Crypto {
         return keyPair;
     }
 
-    private void writePemFile(Key key, String description, String filename)
+    private static void writePemFile(Key key, String description, String filename)
             throws FileNotFoundException, IOException {
         PemFile pemFile = new PemFile(key, description);
         pemFile.write(filename);
         Log.i(TAG, String.format("%s successfully written in file %s.", description, filename));
     }
 
-    public void deleteKeys()
+    public static void deleteKeys()
     {
         File privKey = new File(PRIVATE_KEY_PATH);
         if(privKey.delete())
@@ -122,7 +120,7 @@ public class Crypto {
         }
     }
 
-    public PrivateKey readPrivateKey(String filePath) throws Exception {
+    public static PrivateKey readPrivateKey(String filePath) throws Exception {
 
         File file = new File(filePath);
         String privateKeyContent = new String(Files.readAllBytes(Paths.get(ClassLoader.getSystemResource(filePath).toURI())));
@@ -135,7 +133,7 @@ public class Crypto {
         return kf.generatePrivate(keySpecPKCS8);
     }
 
-    public RSAPublicKey readPublicKey(String filePath) throws Exception {
+    public static RSAPublicKey readPublicKey(String filePath) throws Exception {
 
         File file = new File(filePath);
         String publicKeyContent = new String(Files.readAllBytes(Paths.get(ClassLoader.getSystemResource(filePath).toURI())));
@@ -148,38 +146,22 @@ public class Crypto {
         return (RSAPublicKey) kf.generatePublic(pubKeySpec);
     }
 
-    public void testKeys() throws Exception
-    {
-        PrivateKey privKey = readPrivateKey(PRIVATE_KEY_PATH);
-        PublicKey pubKey = readPublicKey(PUBLIC_KEY_PATH);
-
-        String testString = "RSA keys test";
-        Log.d(TAG, "Unencrypted: " + testString);
-
-        byte[] encrypted = aes_encrypt(testString, pubKey);
-        Log.d(TAG, "Encrypted: " + encrypted);
-
-        String decrypted = aes_decrypt(encrypted, privKey);
-        Log.d(TAG, "Decrypted: " + decrypted);
-    }
 
 
 
-    public byte[] aes_encrypt(String plainText, Cipher encryptCipher) throws Exception {
+    public static byte[] aes_encrypt(byte[] bytes, Cipher encryptCipher) throws Exception {
 
-        byte[] clean = plainText.getBytes();
-        byte[] encrypted = encryptCipher.doFinal(clean);
-
+        byte[] encrypted = encryptCipher.doFinal(bytes);
         return encrypted;
 
     }
 
-    public byte[] aes_decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
+    public static byte[] aes_decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
         return decryptCipher.doFinal(encryptedBytes);
     }
 
 
-    public void aesInit(String key, Peer peer) throws Exception {
+    public static void aesInit(String key, Peer peer) throws Exception {
 
         Cipher encryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
         Cipher decryptCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -214,7 +196,7 @@ public class Crypto {
 
     }
 
-    public void generatePassword(char[] password, int length)
+    public static void generatePassword(char[] password, int length)
     {
         int i = 0;
 

@@ -79,7 +79,7 @@ public class TunnelRunnable implements Runnable {
         dataServiceThread.start();
         tunnelPacketWriterThread.start();
 
-        DataTrafficServer dataTrafficServer = new DataTrafficServer(tunnelPacketWriter)
+        DataTrafficServer dataTrafficServer = new DataTrafficServer(tunnelPacketWriter);
 
         byte[] data;
         int length = 0;

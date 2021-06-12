@@ -58,22 +58,9 @@ public class MainActivity extends AppCompatActivity {
         //String fromC = stringFromJNI();
         //Log.i("MainActivity","Got the following string from C++: " + fromC );
 
-        listItems();
-        try{
-            RSAUtil.testSignAndVerify();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Crypto crypto = new Crypto();
 
         try {
-            crypto.testEncryption();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            crypto.genKeyPair();
+            Crypto.genKeyPair();
         } catch (Exception e) {
             e.printStackTrace();
         }

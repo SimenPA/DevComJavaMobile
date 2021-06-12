@@ -8,36 +8,57 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DataTrafficSender implements Runnable {
-    String ip, msg;
-    byte[] buf;
+    DatagramPacket packet;
 
-    public DataTrafficSender(byte[] data, String msgIn)
+    private final String TAG = DataTrafficSender.class.getSimpleName();
+
+    private Thread worker;
+
+    private AtomicBoolean running = new AtomicBoolean(false);
+    private AtomicBoolean stopped = new AtomicBoolean(true);
+
+    public DataTrafficSender(DatagramPacket packet)
     {
-        ip = ipIn;
-        msg = msgIn;
-        buf = msg.getBytes();
+        this.packet =  packet;
+    }
+
+    public void start() {
+        Log.d(TAG, "Control Traffic is being started");
+        worker = new Thread(this);
+        worker.start();
+        running.set(true);
+        stopped.set(false);
+    }
+
+    public void interrupt() throws IOException {
+        if(isRunning())
+        {
+            running.set(false);
+            stopped.set(true);
+            worker.interrupt();
+        }
     }
 
     public void run() {
 
         try {
-            InetAddress serverAddress = InetAddress.getByName(ip);
             DatagramSocket socket = new DatagramSocket();
-            if (!socket.getBroadcast()) socket.setBroadcast(true);
-            DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                    serverAddress, 1337);
-            Log.i("UDPSender", "Trying to send message: " + msg);
             socket.send(packet);
             socket.close();
-        } catch (final UnknownHostException e) {
-            e.printStackTrace();
-        } catch (final SocketException e) {
-            e.printStackTrace();
+            interrupt();
         } catch (final IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean isRunning() {
+        return running.get();
+    }
+    public boolean isStopped() {
+        return stopped.get();
     }
 
 }

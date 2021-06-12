@@ -29,7 +29,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import com.example.devcomjavamobile.MainActivity;
+import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.DataTrafficSender;
+import com.example.devcomjavamobile.network.devcom.ControlTraffic;
+import com.example.devcomjavamobile.network.devcom.P2P;
 import com.example.devcomjavamobile.network.devcom.Peer;
+import com.example.devcomjavamobile.network.security.Crypto;
+import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
@@ -64,6 +70,8 @@ import static java.net.InetAddress.*;
 public class SessionHandler {
     private final String TAG = SessionHandler.class.getSimpleName();
 
+    private final int PORT_DATA_TRAFFIC =  1337;
+
     private final SessionManager manager;
     private final SocketNIODataService nioService;
     private final ClientPacketWriter writer;
@@ -94,7 +102,7 @@ public class SessionHandler {
      *
      * @param stream ByteBuffer to be read
      */
-    public void handlePacket(@NonNull ByteBuffer stream) throws PacketHeaderException, IOException {
+    public void handlePacket(@NonNull ByteBuffer stream) throws Exception {
         final byte[] rawPacket = new byte[stream.limit()];
         stream.get(rawPacket, 0, stream.limit());
         stream.rewind();
@@ -148,7 +156,7 @@ public class SessionHandler {
 
     }
 
-    private void handleIPv6Packet(ByteBuffer clientPacketData, IPv6Header iPv6Header) throws PacketHeaderException, IOException {
+    private void handleIPv6Packet(ByteBuffer clientPacketData, IPv6Header iPv6Header) throws Exception {
 
         //UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(clientPacketData);
         //Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
@@ -161,6 +169,7 @@ public class SessionHandler {
         if(destinationIP.substring(0, 4).equals("fe80")) // Link-local
         {
             Log.d(TAG, "This IPv6 package is link-local(fe80)");
+            String community = destinationIP.substring(5, 19).replace(":", "").toUpperCase();
             String fingerPrint = destinationIP.substring(20, 39).replace(":", "").toUpperCase();
             Log.d(TAG, "Fingerprint: " + fingerPrint);
             boolean deviceFound = false;
@@ -170,18 +179,43 @@ public class SessionHandler {
                     deviceFound = true;
                     Log.d(TAG, "Device found, trying to send");
 
-                    DatagramSocket socket = new DatagramSocket();
-                    InetAddress serverAddress = getByName(p.getPhysicalAddresses().getFirst());
-                    // SocketProtector protector = new SocketProtector();
-                    // protector.protect(socket);
-                    if (!socket.getBroadcast()) socket.setBroadcast(true);
                     byte[] buf = new byte[clientPacketData.remaining()];
                     clientPacketData.get(buf);
-                    DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                            serverAddress, 1337);
-                    Log.i(TAG, "Trying to forward message to " + p.getFingerPrint() + " which has the IPv4 address " + serverAddress.toString());
-                    socket.send(packet);
-                    socket.close();
+
+                    byte[] encryptedBuffer = Crypto.aes_encrypt(buf, p.getEncryptCipher());
+
+
+                    // Send with UDP if available
+                    if(p.getUdp() == 1)
+                    {
+                        if(p.getControlTraffic() != null)
+                        {
+                            ControlTraffic ct = p.getControlTraffic();
+                            String ipAddress = ct.getPhysicalAddress();
+                            DatagramPacket datagramPacket = new DatagramPacket(encryptedBuffer, buf.length, InetAddress.getByName(ipAddress), PORT_DATA_TRAFFIC);
+
+                            DataTrafficSender dataTrafficSender = new DataTrafficSender(datagramPacket);
+                            dataTrafficSender.start();
+                        }
+
+
+                    }
+                    // Send with TCP as fallback
+                    else if(p.getControlTraffic() != null) {
+
+                        byte[] controlPacket = new byte[2017];
+                        ControlTraffic ct = p.getControlTraffic();
+                        P2P p2p = new P2P(null);
+
+                        p2p.newControlPacket(controlPacket, 'P', community, Utility.createFingerPrint());
+
+                        System.arraycopy(encryptedBuffer, 0, controlPacket, 23, encryptedBuffer.length);
+                        RSAUtil.sign(controlPacket);
+                        ct.write(controlPacket);
+
+                    } else {
+                        Log.d(TAG, "Peer not connected, dismissing packet");
+                    }
 
                     Log.d(TAG, "Package sent");
                 }

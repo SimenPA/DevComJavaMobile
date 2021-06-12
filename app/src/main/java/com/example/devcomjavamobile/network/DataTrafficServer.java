@@ -84,7 +84,9 @@ public class DataTrafficServer implements Runnable {
     @Override
     public void run()
     {
-        DatagramPacket packet = null;
+
+        byte[] buffer = new byte[1500];
+        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         if(datagramSocket == null)
         {
             try {
@@ -95,26 +97,13 @@ public class DataTrafficServer implements Runnable {
         }
         if(datagramSocket != null)
         {
-            try
-            {
-                datagramSocket.setSoTimeout(0); // Don't wait for data
-            } catch(IOException e)
-            {
-                e.printStackTrace();
-            }
             while (this.isRunning()) {
                 Log.d(TAG, "Datagram socket opened");
-                ByteBuffer buffer = ByteBuffer.allocate(1448 + AES_BLOCK_SIZE);
-                int len;
-
                 try {
                     do {
                         datagramSocket.receive(packet);
-                        if (packet != null) {
-                            handleUDPPacket(packet);
-                            Log.d(TAG, "Handed it over to handleUDPPacket");
-                            buffer.clear();
-                        }
+                        handleUDPPacket(packet);
+                        Log.d(TAG, "Handed it over to handleUDPPacket");
                     } while (this.isRunning());
                 }catch(NotYetConnectedException e){
                     Log.e(TAG,"Socket not connected");
@@ -129,6 +118,8 @@ public class DataTrafficServer implements Runnable {
                     }
                 } catch (IOException e) {
                     Log.e(TAG,"Error reading data from SocketChannel: "+ e.getMessage());
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
             }
@@ -165,9 +156,7 @@ public class DataTrafficServer implements Runnable {
             return;
         }
 
-        Crypto c = new Crypto();
-
-        byte[] decryptedData = c.aes_decrypt(encryptedData, peer.getDecryptCipher());
+        byte[] decryptedData = Crypto.aes_decrypt(encryptedData, peer.getDecryptCipher());
         tunnelWriter.write(decryptedData);
         // ClientPacketWriter tunnelWriter = new ClientPacketWriter()
     }

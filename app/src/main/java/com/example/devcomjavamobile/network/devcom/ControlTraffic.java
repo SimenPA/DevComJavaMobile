@@ -38,8 +38,8 @@ public class ControlTraffic implements Runnable {
 
     private final static int PORT_CONTROL = 3283;
 
-    public LinkedList<Peer> peers;
-    public String physicalAddress = "";
+    private LinkedList<Peer> peers;
+    private String physicalAddress = "";
     private Socket sock;
     private SocketChannel socketChannel;
     private ServerSocket serverSock;
@@ -65,6 +65,10 @@ public class ControlTraffic implements Runnable {
         running.set(true);
         stopped.set(false);
     }
+
+    public String getPhysicalAddress() { return physicalAddress; }
+
+    public SocketChannel getSocketChannel() { return socketChannel; }
 
     public void interrupt() throws IOException {
         if(isRunning())
