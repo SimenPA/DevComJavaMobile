@@ -248,6 +248,8 @@ public class PublicKeySender implements Runnable {
                         if (flag) {
                             Log.i(TAG, "Received last datagram, ending.");
                             outToFile.close();
+                            Log.i(TAG, "Content in file received:");
+                            Utility.printFile(serverRoute + "" + fileName);
                             break;
                         }
                     }

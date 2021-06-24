@@ -75,11 +75,7 @@ public class UDPServer implements Runnable {
         try {
             String message;
             byte[] lmessage = new byte[100];
-            //InetAddress serverAddress = Inet4Address.getByName(getIpAddress());
-            ds =  new DatagramSocket(1337);
-            //SocketAddress addr = new InetSocketAddress(1337);
-            //ds.setReuseAddress(true);
-            //ds.bind(addr);
+            ds =  new DatagramSocket(2500);
             ds.setReuseAddress(true);
             packet = new DatagramPacket(lmessage, lmessage.length);
             activity.runOnUiThread(new Runnable() {
@@ -95,11 +91,7 @@ public class UDPServer implements Runnable {
                     message = new String(lmessage, 0, packet.getLength());
                     String finalMessage = message;
                     Log.i("UDPServer", "UDP Message received: " + finalMessage);
-                    activity.runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    activity.runOnUiThread(() -> Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show());
                 } catch (SocketException e)
                 {
                     if(e.getMessage().equals("Socket closed")) Log.i("UDPServer", "Ignoring socket closed exception");

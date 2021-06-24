@@ -34,7 +34,7 @@ public class UDPSender implements Runnable {
                 DatagramSocket socket = new DatagramSocket();
                 if (!socket.getBroadcast()) socket.setBroadcast(true);
                 DatagramPacket packet = new DatagramPacket(buf, buf.length,
-                        serverAddress, 1337);
+                        serverAddress, 2500);
                 Log.i("UDPSender", "Trying to send message: " + msg);
                 socket.send(packet);
                 socket.close();

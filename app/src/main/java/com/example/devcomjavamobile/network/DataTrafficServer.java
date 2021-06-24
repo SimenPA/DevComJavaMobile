@@ -17,6 +17,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
@@ -31,13 +32,11 @@ import static android.widget.Toast.makeText;
 
 public class DataTrafficServer implements Runnable {
 
-    public final String TAG = ControlTraffic.class.getSimpleName();
+    public final String TAG = DataTrafficServer.class.getSimpleName();
 
     private final String PRIVATE_KEY_PATH = "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
 
     private final int AES_BLOCK_SIZE = 256;
-
-    byte[] DatagramPacket = new byte[1500];
 
     private final BlockingDeque<DatagramPacket> packetQueue = new LinkedBlockingDeque<>();
 
@@ -60,7 +59,7 @@ public class DataTrafficServer implements Runnable {
     }
 
     public void start() {
-        Log.d(TAG, "Control Traffic is being started");
+        Log.d(TAG, "Data traffic server is being started");
         worker = new Thread(this);
         worker.start();
         running.set(true);
@@ -90,8 +89,8 @@ public class DataTrafficServer implements Runnable {
         if(datagramSocket == null)
         {
             try {
-                datagramSocket.bind(new InetSocketAddress(PORT_DATA));
-            } catch (IOException e) {
+                datagramSocket = new DatagramSocket(PORT_DATA);
+            } catch (SocketException e) {
                 e.printStackTrace();
             }
         }
@@ -140,14 +139,17 @@ public class DataTrafficServer implements Runnable {
 
     public void handleUDPPacket(@NonNull DatagramPacket packet) throws Exception {
 
-        PeersHandler pHandler = new PeersHandler(peers);
         InetAddress address = packet.getAddress();
-        byte[] encryptedData = packet.getData();
+        Log.i(TAG, "Address in incoming UDP packet: " + address.toString().replace("/", ""));
+        byte[] buffer = packet.getData();
+        int packetLength = packet.getLength();
+        byte[] encryptedData = new byte[packetLength];
+        System.arraycopy(buffer, 0, encryptedData, 0, packetLength);
 
         Peer peer = null;
 
         for(Peer p: peers) {
-            for(String ip: p.getPhysicalAddresses()) if(ip.equals(address.toString())) peer = p;
+            for(String ip : p.getPhysicalAddresses()) if(ip.equals(address.toString().replace("/", ""))) peer = p;
         }
 
         if(peer == null)
@@ -155,9 +157,16 @@ public class DataTrafficServer implements Runnable {
             Log.d(TAG, "Received UDP message from unknown peer. Dismissing");
             return;
         }
+        if(peer.getControlTraffic() != null )
+        {
+            Log.d(TAG, "Received UDP message from peer " + peer.getFingerPrint());
+            Log.d(TAG, "Encrypted data length: " + encryptedData.length);
+            byte[] decryptedData = Crypto.aes_decrypt(encryptedData, peer.getDecryptCipher());
+            tunnelWriter.write(decryptedData);
+        } else {
+            Log.i(TAG, "No active session with sending peer. Dismissing packet");
+        }
 
-        byte[] decryptedData = Crypto.aes_decrypt(encryptedData, peer.getDecryptCipher());
-        tunnelWriter.write(decryptedData);
         // ClientPacketWriter tunnelWriter = new ClientPacketWriter()
     }
 

@@ -22,6 +22,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.SynchronousQueue;
@@ -183,6 +184,9 @@ public class SessionHandler {
                     clientPacketData.get(buf);
 
                     byte[] encryptedBuffer = Crypto.aes_encrypt(buf, p.getEncryptCipher());
+                    Log.i(TAG, "Encrypted buffer length: " + encryptedBuffer.length);
+                    byte[] decryptedBuffer = Crypto.aes_decrypt(encryptedBuffer, p.getDecryptCipher());
+                    Log.i(TAG, "AES decryption test. Decrypted text: " + Arrays.toString(decryptedBuffer));
 
 
                     // Send with UDP if available
@@ -192,7 +196,7 @@ public class SessionHandler {
                         {
                             ControlTraffic ct = p.getControlTraffic();
                             String ipAddress = ct.getPhysicalAddress();
-                            DatagramPacket datagramPacket = new DatagramPacket(encryptedBuffer, buf.length, InetAddress.getByName(ipAddress), PORT_DATA_TRAFFIC);
+                            DatagramPacket datagramPacket = new DatagramPacket(encryptedBuffer, encryptedBuffer.length, InetAddress.getByName(ipAddress), PORT_DATA_TRAFFIC);
 
                             DataTrafficSender dataTrafficSender = new DataTrafficSender(datagramPacket);
                             dataTrafficSender.start();
@@ -210,7 +214,7 @@ public class SessionHandler {
                         p2p.newControlPacket(controlPacket, 'P', community, Utility.createFingerPrint());
 
                         System.arraycopy(encryptedBuffer, 0, controlPacket, 23, encryptedBuffer.length);
-                        RSAUtil.sign(controlPacket);
+                        Crypto.sign(controlPacket);
                         ct.write(controlPacket);
 
                     } else {

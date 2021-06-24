@@ -125,7 +125,7 @@ public class InfoFragment extends Fragment {
         for(Peer p : peers)
         {
             peersStringTable[i] =  p.getFingerPrint();
-            communitiesStringTable[i] = p.getCommunities().getLast();
+            if(!p.getCommunities().isEmpty()) communitiesStringTable[i] = p.getCommunities().getFirst();
             i++;
         }
 

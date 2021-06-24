@@ -23,6 +23,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Security;
+import java.security.Signature;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -75,7 +76,7 @@ public class Crypto {
         if(!privKeyExists || !pubKeyExists)
         {
             Log.d(TAG, "One of the keys does not exist, deleting any remaining key and creating a new key pair");
-            deleteKeys();
+            deleteRSAKeys();
 
             KeyPair keyPair = generateRSAKeyPair();
             RSAPrivateKey priv = (RSAPrivateKey) keyPair.getPrivate();
@@ -98,14 +99,8 @@ public class Crypto {
         return keyPair;
     }
 
-    private static void writePemFile(Key key, String description, String filename)
-            throws FileNotFoundException, IOException {
-        PemFile pemFile = new PemFile(key, description);
-        pemFile.write(filename);
-        Log.i(TAG, String.format("%s successfully written in file %s.", description, filename));
-    }
 
-    public static void deleteKeys()
+    public static void deleteRSAKeys()
     {
         File privKey = new File(PRIVATE_KEY_PATH);
         if(privKey.delete())
@@ -120,9 +115,15 @@ public class Crypto {
         }
     }
 
+    private static void writePemFile(Key key, String description, String filename)
+            throws FileNotFoundException, IOException {
+        PemFile pemFile = new PemFile(key, description);
+        pemFile.write(filename);
+        Log.i(TAG, String.format("%s successfully written in file %s.", description, filename));
+    }
+
     public static PrivateKey readPrivateKey(String filePath) throws Exception {
 
-        File file = new File(filePath);
         String privateKeyContent = new String(Files.readAllBytes(Paths.get(ClassLoader.getSystemResource(filePath).toURI())));
 
         privateKeyContent = privateKeyContent.replaceAll("\\n", "").replace("-----BEGIN RSA PRIVATE KEY-----", "").replace("-----END RSA PRIVATE KEY-----", "");
@@ -135,7 +136,6 @@ public class Crypto {
 
     public static RSAPublicKey readPublicKey(String filePath) throws Exception {
 
-        File file = new File(filePath);
         String publicKeyContent = new String(Files.readAllBytes(Paths.get(ClassLoader.getSystemResource(filePath).toURI())));
 
         publicKeyContent = publicKeyContent.replaceAll("\\n", "").replace("-----BEGIN RSA PUBLIC KEY-----", "").replace("-----END RSA PUBLIC KEY-----", "");
@@ -206,6 +206,86 @@ public class Crypto {
             char c = (char) (n + 65);
             password[i] = c;
         }
+    }
+
+    public static boolean encryptControlPacket(byte[] controlPacket, byte[] payload, PublicKey publicKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+        byte[] newPayload =  new byte[1500];
+        if(payload.length <= 1500)
+        {
+            System.arraycopy(payload, 0, newPayload, 0, payload.length);
+        } else {
+            Log.e(TAG, "Payload length is longer than the maximum allowed 1500 bytes");
+            return false;
+        }
+
+
+        for(int i = 0; i < 3; i++)
+        {
+            byte[] toEncrypt =  new byte[500];
+            System.arraycopy(newPayload,(i * 500), toEncrypt, 0, 500); // - 12 due to PKCS1 Padding
+            System.arraycopy(cipher.doFinal(toEncrypt), 0, controlPacket, (i*512) + 23, 512); // Destintation (i * 512) + 23 due to encryption leaving 512 bytes and to skip the 23 byte header in control packet
+        }
+        return true;
+    }
+
+    public static boolean decryptControlPacket(byte[] controlPacket, byte[] payload, PrivateKey privateKey) throws BadPaddingException, IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+
+        for(int i = 0; i < 3; i++)
+        {
+            byte[] toDecrypt =  new byte[512];
+            System.arraycopy(payload,(i * 512), toDecrypt, 0, 512); //
+            System.arraycopy(cipher.doFinal(toDecrypt), 0, controlPacket, (i*500) + 23, 500); // Destination (i * 500) + 23 due to decryption leaving 500 bytes and to skip the 23 byte header in control packet
+        }
+        return true;
+    }
+
+    public static byte[] decryptRSA(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        byte[] decryptedPacket = new byte[data.length];
+        for(int i = 0; i < data.length / 500; i++)
+        {
+            byte[] toDecrypt =  new byte[512];
+            System.arraycopy(data,(i * 512) + 23, toDecrypt, 0, 512);
+            System.arraycopy(cipher.doFinal(toDecrypt), 0, decryptedPacket, (i*512), 512);
+        }
+
+        return data;
+    }
+
+    public static int sign(byte[] controlPacket) throws Exception {
+
+        byte[] data = new byte[1559];
+
+        System.arraycopy(controlPacket, 0, data, 0, data.length);
+        Signature privateSignature = Signature.getInstance("SHA256withRSA");
+        privateSignature.initSign(readPrivateKey(PRIVATE_KEY_PATH));
+        privateSignature.update(data);
+
+        byte[] signatureBytes = privateSignature.sign();
+        System.arraycopy(signatureBytes, 0, controlPacket, 1559, signatureBytes.length);
+        return signatureBytes.length;
+    }
+
+    public static boolean verifyControlPacket(byte[] controlPacket, RSAPublicKey publicKey) throws Exception
+    {
+        byte[] signatureBytes = new byte[512];
+        System.arraycopy(controlPacket, 1559, signatureBytes, 0, signatureBytes.length);
+        Signature sign = Signature.getInstance("SHA256withRSA");
+        sign.initVerify(publicKey);
+
+        byte[] data = new byte[1559];
+        System.arraycopy(controlPacket, 0, data, 0, data.length);
+        sign.update(data);
+
+        return sign.verify(signatureBytes);
     }
 
 }

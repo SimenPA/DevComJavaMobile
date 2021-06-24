@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -86,6 +87,7 @@ public class UDPFileServer implements Runnable {
         while(isRunning()) {
             try {
                 DatagramPacket receiveTransferTypePacket = new DatagramPacket(receiveTransferType, receiveTransferType.length);
+                ds.setSoTimeout(0);
                 ds.receive(receiveTransferTypePacket);
                 byte[] data = receiveTransferTypePacket.getData();
                 String transferType = new String(data, 0, receiveTransferTypePacket.getLength());

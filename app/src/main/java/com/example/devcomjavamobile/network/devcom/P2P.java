@@ -14,8 +14,6 @@ import java.net.Socket;
 import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedList;
 
-import javax.crypto.Cipher;
-
 import static com.example.devcomjavamobile.network.devcom.Peer.PASSWORD_LENGTH;
 
 public class P2P {
@@ -86,36 +84,37 @@ public class P2P {
         } else { hasPublicKey = true; }
 
         if(hasPublicKey) {
-            Crypto crypto = new Crypto();
 
-            peer.setUdp(0); // Not sure why this is necessary, but it is done in the DevCom C
+            peer.setUdp(1); // This should be set to 0 here, and set to 1 if UDP check is successful, but this is always set to 1 here as I join from VM to physical,
+            // and UDP only works from VM to physical in my testing case, so check will fail physical to VM, but other way will work
 
             // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
             byte[] controlPacket = new byte[2071];
             Log.d(TAG, "My fingerprint: " + myFingerPrint);
             Log.i(TAG, "Community: " + commmunity);
             newControlPacket(controlPacket, 'J', commmunity, myFingerPrint);
+            peer.addCommunity(commmunity);
 
             byte packetType = controlPacket[0]; // "J", "P", "S" "T" "L" "D" "A"
             Log.i(TAG, "Packet Type: " + (char) packetType);
 
 
             char[] key = new char[PASSWORD_LENGTH];
-            crypto.generatePassword(key, PASSWORD_LENGTH);
-            Log.d(TAG, "Session key: " + key.toString());
+            Crypto.generatePassword(key, PASSWORD_LENGTH);
+            Log.d(TAG, "Session key: " + String.valueOf(key));
             peer.setPassword(key); // adds session key
 
             // Initliaize AES encryption
-            crypto.aesInit(key.toString(), peer);
+            Crypto.aesInit(String.valueOf(key), peer);
 
             byte[] payload = new byte[32];
             for(int i = 0; i < key.length; i++)
                 payload[i] = (byte) key[i];
 
-            boolean successfulEncryption = RSAUtil.encrypt(controlPacket, payload, peer.getPublicKey()); // encrypt using RSA
+            boolean successfulEncryption = Crypto.encryptControlPacket(controlPacket, payload, peer.getPublicKey()); // encrypt using RSA
             if(successfulEncryption)
             {
-                int signatureLength = RSAUtil.sign(controlPacket); // sign with RSA public key
+                int signatureLength = Crypto.sign(controlPacket); // sign with RSA public key
                 if(signatureLength == 512)
                 {
                     Log.d(TAG, "Preparing to write control package");
@@ -164,5 +163,4 @@ public class P2P {
         return publicModulus.toString(16).substring(0,16).toUpperCase();
     }
 
-    public native char[] control_packet_encrypt(char[] packet, char[] payload, String key_pair);
 }

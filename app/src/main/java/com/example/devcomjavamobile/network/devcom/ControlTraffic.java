@@ -16,6 +16,7 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
@@ -227,11 +228,11 @@ public class ControlTraffic implements Runnable {
         if(p != null) {
             boolean verified = false;
             try {
-                verified = RSAUtil.verify(buf, p.getPublicKey());
+                verified = Crypto.verifyControlPacket(buf, p.getPublicKey());
                 if (verified) {
 
                     if(packetType == 'J') { // J = join
-                        handleControlJoin(buf, channel, p);
+                        handleControlJoin(buf, channel, p, comStrb.toString());
                     } else if(packetType == 'P') { // P = packet, i.e. data packet that is normally sent over UDP with TCP as fallback
                         handleControlPacket(buf, channel, p);
                     }
@@ -249,30 +250,41 @@ public class ControlTraffic implements Runnable {
         }
     }
 
-    public void handleControlJoin(byte[] data, SocketChannel channel, Peer p) throws Exception
+    public void handleControlJoin(byte[] data, SocketChannel channel, Peer p, String community) throws Exception
     {
 
-        Crypto c = new Crypto();
-        p.setControlTraffic(this);
 
         byte[] encryptedPayload = new byte[1536];
         System.arraycopy(data, 23, encryptedPayload,0,1536);
 
-        byte[] payLoad = RSAUtil.decrypt(encryptedPayload, c.readPrivateKey(PRIVATE_KEY_PATH));
+        boolean successfulDecryption = Crypto.decryptControlPacket(data, encryptedPayload, Crypto.readPrivateKey(PRIVATE_KEY_PATH));
+        if(successfulDecryption)
+        {
+            byte[] passwordBytes = new byte[32];
+            System.arraycopy(data,23, passwordBytes, 0, 32);
 
-        byte[] passwordBytes = new byte[32];
-        System.arraycopy(payLoad,0, passwordBytes, 0, 32);
+            char[] password = new char[32];
+            for(int i = 0; i < passwordBytes.length; i++) {
+                password[i] = (char)passwordBytes[i];
+            }
+            p.setPassword(password);
+            Log.i(TAG, "Password for session has been set. Password: " + String.valueOf(p.getPassword()));
+            Log.i(TAG, "Join message from device " + p.getFingerPrint() + " verified. Session has been opened.");
+            Crypto.aesInit(String.valueOf(p.getPassword()), p);
 
-        char[] password = new char[32];
-        for(int i = 0; i < passwordBytes.length; i++) {
-            password[i] = (char)passwordBytes[i];
+            p.addCommunity(community);
+
+            p.setControlTraffic(this);
+            InetSocketAddress remoteIpAddresss =  (InetSocketAddress)channel.getRemoteAddress();
+            p.addPhysicalAddress(remoteIpAddresss.getAddress().getHostAddress());
+
+            // Check if sender supports receiving UDP
+            UDPCheckSender udpCheckSender = new UDPCheckSender(p.getPhysicalAddresses().getFirst(), "SYN");
+            udpCheckSender.run();
+        } else {
+            Log.i(TAG,"Unable to decrypt control message and get session key. Aborting session");
+            interrupt();
         }
-        p.setPassword(password);
-        Log.i(TAG, "Join message from device " + p.getFingerPrint() + " verified. Session has been opened.");
-
-        // Check if sender supports receiving UDP
-        UDPCheckSender udpCheckSender = new UDPCheckSender(p.getPhysicalAddresses().getFirst(), "SYN");
-        udpCheckSender.run();
     }
 
 

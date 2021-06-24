@@ -26,7 +26,7 @@ public class DataTrafficSender implements Runnable {
     }
 
     public void start() {
-        Log.d(TAG, "Control Traffic is being started");
+        Log.d(TAG, "Data traffic sender is being started");
         worker = new Thread(this);
         worker.start();
         running.set(true);

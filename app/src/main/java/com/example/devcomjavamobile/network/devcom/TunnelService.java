@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Objects;
 
+import static android.system.OsConstants.AF_INET;
 import static android.system.OsConstants.AF_INET6;
 
 public class TunnelService extends VpnService implements IProtectSocket {
@@ -116,8 +117,8 @@ public class TunnelService extends VpnService implements IProtectSocket {
         ParcelFileDescriptor tunnelInterface = new Builder()
                 .addAddress(tunnelAddress, 128)
                 .allowFamily(AF_INET6)
-                //.allowFamily(AF_INET)
-                //.addRoute("0.0.0.0", 0) // All IPv4 addresses
+                .allowFamily(AF_INET)
+                .addRoute("0.0.0.0", 0) // All IPv4 addresses
                 .addRoute("0000:0000:0000:0000:0000:0000:0000:0000", 0) // All IPv6 addresses
                 .setMtu(MAX_PACKET_LEN)
                 .setBlocking(true)
