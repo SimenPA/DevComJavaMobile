@@ -1,5 +1,7 @@
 package com.example.devcomjavamobile;
 
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import com.example.devcomjavamobile.network.security.Crypto;
@@ -7,8 +9,15 @@ import com.example.devcomjavamobile.network.security.Crypto;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Scanner;
+
+import static android.content.Context.WIFI_SERVICE;
 
 public class Utility {
 
@@ -90,4 +99,21 @@ public class Utility {
             e.printStackTrace();
         }
     }
+
+    public static int ipv4toInt(String address)
+    {
+        int firstOct, secondOct, thirdOct, fourthOct;
+        StringBuilder strB;
+        int i = 0;
+        for(char c : address.toCharArray())
+        {
+            if(c == ':')
+            {
+                i++;
+
+            }
+        }
+        return 10;
+    }
+
 }

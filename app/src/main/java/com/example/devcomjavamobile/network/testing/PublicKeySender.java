@@ -3,6 +3,8 @@ package com.example.devcomjavamobile.network.testing;
 import android.util.Log;
 
 import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.devcom.Peer;
+import com.example.devcomjavamobile.network.devcom.PeersHandler;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,6 +14,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.LinkedList;
 
 /*
  * Based on File Send/Receive example by GitHub user absalomhr: https://gist.github.com/absalomhr/ce11c2e43df517b2571b1dfc9bc9b487
@@ -28,11 +31,13 @@ public class PublicKeySender implements Runnable {
     int port;
     String host;
     String pubKeyFileName;
+    LinkedList<Peer> peers;
 
-    public PublicKeySender(String host, int port, String pubKeyFileName) {
+    public PublicKeySender(String host, int port, String pubKeyFileName, LinkedList<Peer> peers) {
         this.host = host;
         this.port = port;
         this.pubKeyFileName = pubKeyFileName;
+        this.peers =  peers;
     }
 
     @Override
@@ -248,8 +253,11 @@ public class PublicKeySender implements Runnable {
                         if (flag) {
                             Log.i(TAG, "Received last datagram, ending.");
                             outToFile.close();
-                            Log.i(TAG, "Content in file received:");
-                            Utility.printFile(serverRoute + "" + fileName);
+                            String fingerPrint = fileName.substring(0, 16);
+                            if (PeersHandler.getPeer(fingerPrint, peers) != null)
+                            {
+                                PeersHandler.addFingerPrint(fingerPrint, peers);
+                            }
                             break;
                         }
                     }

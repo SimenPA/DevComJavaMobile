@@ -15,9 +15,11 @@ import androidx.lifecycle.ViewModelProviders;
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.testing.PublicKeySender;
 import com.example.devcomjavamobile.network.testing.UDPSender;
 
+import java.util.LinkedList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -27,6 +29,7 @@ public class TransportFragment extends Fragment {
     private static final String TAG = TransportFragment.class.getSimpleName();
 
     EditText ipText, msgText;
+    LinkedList<Peer> peers;
 
     Button startTCPServerBtn, stopTCPServerBtn, startUdpServerBtn, stopUdpServerBtn, sendPubKeyBtn;
 
@@ -44,6 +47,8 @@ public class TransportFragment extends Fragment {
 
         ipText = (EditText)root.findViewById(R.id.enterIPEditText);
         msgText = (EditText)root.findViewById(R.id.enterMsgEditText);
+
+        peers = ((MainActivity)getActivity()).getPeers();
 
         String newString;
         if (savedInstanceState == null) {
@@ -77,7 +82,7 @@ public class TransportFragment extends Fragment {
                         e.printStackTrace();
                     }
                     Executor e = Executors.newCachedThreadPool();
-                    PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 2500, fingerPrint);
+                    PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 2500, fingerPrint, peers);
                     e.execute(b);
                 });
 

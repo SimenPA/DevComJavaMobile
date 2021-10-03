@@ -1,6 +1,6 @@
 package com.example.devcomjavamobile.network.vpn.socket;
 
-import java.net.DatagramSocket;
+import  java.net.DatagramSocket;
 import java.net.Socket;
 
 /* Imported by Simen Persch Andersen on 29.03.2021 from

@@ -30,6 +30,18 @@ public class UDPPacketFactory {
         return new UDPHeader(srcPort, destPort, length, checksum);
     }
 
+    public static UDPHeader createUDPHeader(@NonNull byte[] udpData) throws PacketHeaderException{
+        if ((udpData.length) < 8){
+            throw new PacketHeaderException("Minimum UDP header is 8 bytes.");
+        }
+        int srcPort = ((udpData[0] & 0xff) << 8) | (udpData[1] & 0xff);
+        int destPort = ((udpData[2] & 0xff) << 8) | (udpData[3] & 0xff);
+        int length = ((udpData[4] & 0xff) << 8) | (udpData[5] & 0xff);
+        int checkSum = ((udpData[6] & 0xff) << 8) | (udpData[7] & 0xff);
+
+        return new UDPHeader(srcPort, destPort, length, checkSum);
+    }
+
     public static UDPHeader copyHeader(UDPHeader header){
         return new UDPHeader(header.getSourcePort(), header.getDestinationPort(),
                 header.getLength(), header.getChecksum());
@@ -47,14 +59,14 @@ public class UDPPacketFactory {
         if(packetData != null){
             udpLen += packetData.length;
         }
-        int srcPort = udp.getDestinationPort();
-        int destPort = udp.getSourcePort();
+        int srcPort = udp.getSourcePort();
+        int destPort = udp.getDestinationPort();
         short checksum = 0;
 
         IPv4Header ipHeader = IPPacketFactory.copyIPv4Header(ip);
 
-        int srcIp = ip.getDestinationIP();
-        int destIp = ip.getSourceIP();
+        int srcIp = ip.getSourceIP();
+        int destIp = ip.getDestinationIP();
         ipHeader.setMayFragment(false);
         ipHeader.setSourceIP(srcIp);
         ipHeader.setDestinationIP(destIp);

@@ -76,11 +76,11 @@ public class TunnelRunnable implements Runnable {
         }
         Log.d(TAG, "Tunnel thread starting");
 
-        dataServiceThread.start();
-        tunnelPacketWriterThread.start();
-
         DataTrafficServer dataTrafficServer = new DataTrafficServer(tunnelPacketWriter);
         dataTrafficServer.start();
+
+        dataServiceThread.start();
+        tunnelPacketWriterThread.start();
 
         byte[] data;
         int length = 0;
@@ -95,7 +95,7 @@ public class TunnelRunnable implements Runnable {
                     catch (IOException e) {
                         Log.i(TAG, "IOException in tunnelReadStream.read(data)",e);
                     }
-                if (length > 0) {
+                if (length > 0) { //
                     // Log.i(TAG, "Packet inc");
                     try {
                         packet.limit(length);

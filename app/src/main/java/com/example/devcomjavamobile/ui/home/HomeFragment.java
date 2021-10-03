@@ -34,9 +34,6 @@ public class HomeFragment extends Fragment {
         View root = inflater.inflate(R.layout.fragment_home, container, false);
 
 
-        UDPServer msgServer = new UDPServer(getActivity());
-        UDPFileServer fileServer = new UDPFileServer(getActivity());
-
         addressText = (EditText)root.findViewById(R.id.enterAddressEditText);
         communityText = (EditText)root.findViewById(R.id.enterComEditText);
         fingerPrintText = (EditText)root.findViewById(R.id.enterFingerPrintEditText);

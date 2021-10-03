@@ -39,7 +39,7 @@ public class ControlTraffic implements Runnable {
 
     private final static int PORT_CONTROL = 3283;
 
-    private LinkedList<Peer> peers;
+    private final LinkedList<Peer> peers;
     private String physicalAddress = "";
     private Socket sock;
     private SocketChannel socketChannel;
@@ -49,8 +49,8 @@ public class ControlTraffic implements Runnable {
     private PrintWriter pw;
     private Thread worker;
 
-    private AtomicBoolean running = new AtomicBoolean(false);
-    private AtomicBoolean stopped = new AtomicBoolean(true);
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(true);
 
     public ControlTraffic(String physicalAddress, SocketChannel channel)
     {
@@ -196,7 +196,6 @@ public class ControlTraffic implements Runnable {
 
     public void handleTCPPacket(@NonNull ByteBuffer packetData, SocketChannel channel) throws IOException {
 
-        PeersHandler pHandler = new PeersHandler(peers);
 
         byte[] buf = new byte[packetData.remaining()];
         packetData.get(buf);
@@ -224,7 +223,7 @@ public class ControlTraffic implements Runnable {
         }
         Log.d(TAG, "Community: " + comStrb.toString());
         Log.d(TAG, "Fingerprint: " + fingStrb.toString());
-        Peer p = pHandler.getPeer(fingStrb.toString());
+        Peer p = PeersHandler.getPeer(fingStrb.toString(), peers);
         if(p != null) {
             boolean verified = false;
             try {

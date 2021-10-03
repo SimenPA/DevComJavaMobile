@@ -43,24 +43,22 @@ public class P2P {
         }
     }
     public void joinCommunity(String community, String devFingerPrint, String devPhysicalAddress) throws Exception {
-        PeersHandler pHandler = new PeersHandler(peers);
         Log.i(TAG, "My fingerprint: " + myFingerPrint.toUpperCase());
-        pHandler.addFingerPrint(devFingerPrint);
-        pHandler.addPhysicalAddress(devFingerPrint, devPhysicalAddress);
+        PeersHandler.addFingerPrint(devFingerPrint, peers);
+        PeersHandler.addPhysicalAddress(devFingerPrint, devPhysicalAddress, peers);
 
         Log.d(TAG, "PeersHandler has added community, supposedly");
 
         //TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
         ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null);
         controlTraffic.start();
-        pHandler.addControlTraffic(devFingerPrint, controlTraffic);
+        PeersHandler.addControlTraffic(devFingerPrint, controlTraffic, peers);
 
         sendControlJoin(controlTraffic, community, devFingerPrint);
     }
 
     public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws Exception {
-        PeersHandler pHandler = new PeersHandler(peers);
-        Peer peer = pHandler.getPeer(fingerPrint);
+        Peer peer = PeersHandler.getPeer(fingerPrint, peers);
         if(peer == null)
         {
             Log.i(TAG, "No known device with fingerprint: " + fingerPrint);
@@ -75,8 +73,7 @@ public class P2P {
             for(String file : fileList) {
                 if(file.equals(fingerPrint + "pem.tramp"))
                 {
-                    Crypto c = new Crypto();
-                    RSAPublicKey pk = c.readPublicKey(file);
+                    RSAPublicKey pk = Crypto.readPublicKey(file);
                     peer.setPublicKey(pk);
                     hasPublicKey = true;
                 }
@@ -131,6 +128,7 @@ public class P2P {
         }
     }
 
+    //TODO: Add this method
     public void sendControlSync(Socket controlSocket, String commmunity, String fingerPrint)
     {
 
@@ -155,10 +153,7 @@ public class P2P {
 
 
     public String createFingerprint() throws Exception {
-
-        Crypto c = new Crypto();
-
-        RSAPublicKey pk = c.readPublicKey(PUBLIC_KEY_PATH);
+        RSAPublicKey pk = Crypto.readPublicKey(PUBLIC_KEY_PATH);
         BigInteger publicModulus = pk.getModulus();
         return publicModulus.toString(16).substring(0,16).toUpperCase();
     }

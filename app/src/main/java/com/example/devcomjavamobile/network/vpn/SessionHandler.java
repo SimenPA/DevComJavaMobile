@@ -108,7 +108,6 @@ public class SessionHandler {
         stream.get(rawPacket, 0, stream.limit());
         stream.rewind();
 
-
         final Object IPHeader = IPPacketFactory.createIPHeader(stream);
         IPv4Header ipv4Header;
         IPv6Header ipv6Header;
@@ -183,11 +182,14 @@ public class SessionHandler {
                     byte[] buf = new byte[clientPacketData.remaining()];
                     clientPacketData.get(buf);
 
+                    Log.i(TAG, "Unencrypted data length: " + buf.length);
+                    Log.i(TAG, "Data: " + Arrays.toString(buf));
                     byte[] encryptedBuffer = Crypto.aes_encrypt(buf, p.getEncryptCipher());
-                    Log.i(TAG, "Encrypted buffer length: " + encryptedBuffer.length);
-                    byte[] decryptedBuffer = Crypto.aes_decrypt(encryptedBuffer, p.getDecryptCipher());
-                    Log.i(TAG, "AES decryption test. Decrypted text: " + Arrays.toString(decryptedBuffer));
+                    Log.i(TAG, "Encrypted data length: " + encryptedBuffer.length);
+                    Log.i(TAG, "Encrypted data: " + Arrays.toString(encryptedBuffer));
 
+                    byte[] decryptedBuffer = Crypto.aes_decrypt(encryptedBuffer, p.getDecryptCipher());
+                    Log.i(TAG, "Decrypted data: " + Arrays.toString(decryptedBuffer));
 
                     // Send with UDP if available
                     if(p.getUdp() == 1)
@@ -299,7 +301,6 @@ public class SessionHandler {
                 } else if (!tcpheader.isRST()) {
                     sendRstPacket(ipHeader, tcpheader, dataLength);
                 }
-
                 return;
             }
 

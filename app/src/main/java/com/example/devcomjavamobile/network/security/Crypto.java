@@ -28,6 +28,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -42,6 +43,7 @@ public class Crypto {
     private final static String PRIVATE_KEY_PATH =  "/data/data/com.example.devcomjavamobile/private_key.pem.tramp";
     private final static String PUBLIC_KEY_PATH = "/data/data/com.example.devcomjavamobile/public_key.pem.tramp";
     private final int KEY_SIZE =  4096;
+    private final static int AES_BLOCK_SIZE =  16; // 16 bytes
 
     private final static String TAG = Crypto.class.getSimpleName();
 
@@ -150,14 +152,46 @@ public class Crypto {
 
 
     public static byte[] aes_encrypt(byte[] bytes, Cipher encryptCipher) throws Exception {
-
-        byte[] encrypted = encryptCipher.doFinal(bytes);
-        return encrypted;
-
+        byte[] encryptBlock = new byte[16 + bytes.length];
+        System.arraycopy(bytes, 0, encryptBlock, 16, bytes.length);
+        return encryptCipher.doFinal(encryptBlock);
     }
+        /*
+        int c_len = bytes.length + AES_BLOCK_SIZE;
+        int buf_len = (int)(Math.ceil(c_len/16.0) * 16);
+        Log.i(TAG, "Buf_len: " + buf_len);
+        Log.i(TAG, "C_len: " + c_len);
+        byte[] cipherText =  new byte[buf_len];
+        encryptCipher.doFinal(bytes, 0, bytes.length, cipherText, 0);
+        return cipherText;
+         */
 
     public static byte[] aes_decrypt(byte[] encryptedBytes, Cipher decryptCipher) throws Exception {
-        return decryptCipher.doFinal(encryptedBytes);
+        byte[] decryptedWithIV =  decryptCipher.doFinal(encryptedBytes);
+        byte[] decrypted =  new byte[decryptedWithIV.length - 16];
+        System.arraycopy(decryptedWithIV,16, decrypted, 0, decrypted.length);
+        return decrypted;
+    }
+
+    public static void testEncryption() throws Exception {
+        Peer peer = new Peer();
+
+        char[] password = new char[32];
+        generatePassword(password, 32);
+        aesInit(password.toString(), peer);
+        char[] message = "Heisann test".toCharArray();
+        byte[] buf = new byte[message.length];
+        for(int i = 0; i < message.length; i++)
+        {
+            buf[i] = (byte) message[i];
+        }
+        Log.i(TAG, "Data: " + Arrays.toString(buf));
+        byte[] encrypted = aes_encrypt(buf, peer.getEncryptCipher());
+        Log.i(TAG, "Encrypted data: " + Arrays.toString(encrypted));
+        byte[] decrypted = aes_decrypt(encrypted, peer.getDecryptCipher());
+        Log.i(TAG, "Decrypted data: " + Arrays.toString(decrypted));
+
+
     }
 
 
@@ -176,7 +210,7 @@ public class Crypto {
         // Hashing key.
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         digest.update(key.getBytes("UTF-8"));
-        byte[] keyBytes = new byte[16];
+        byte[] keyBytes = new byte[32];
         // Hashing three times
         for(int i = 0; i > 3; i++)
         {
@@ -190,9 +224,12 @@ public class Crypto {
         encryptCipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
         // Decrypt cipher init.
         decryptCipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+        if(peer != null)
+        {
+            peer.setEncryptCipher(encryptCipher);
+            peer.setDecryptCipher(decryptCipher);
+        }
 
-        peer.setEncryptCipher(encryptCipher);
-        peer.setDecryptCipher(decryptCipher);
 
     }
 
@@ -287,6 +324,7 @@ public class Crypto {
 
         return sign.verify(signatureBytes);
     }
+
 
 }
 

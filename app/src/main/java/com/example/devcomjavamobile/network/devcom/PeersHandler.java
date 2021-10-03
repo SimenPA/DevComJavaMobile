@@ -7,54 +7,45 @@ public class PeersHandler {
 
     LinkedList<Peer> peers;
 
-    public PeersHandler(LinkedList<Peer> peers)
-    {
-        this.peers = peers;
-    }
 
-    public Peer addPhysicalAddress(String fingerPrint, String physicalAddress)
+    public static void addPhysicalAddress(String fingerPrint, String physicalAddress, LinkedList<Peer> peers)
     {
 
-        boolean fingerPrintExists = false;
         for(Peer peer : peers)
         {
             if(peer.getFingerPrint().equals(fingerPrint))
             {
                 peer.addPhysicalAddress(physicalAddress);
-                return peer;
+                return;
             }
         }
 
         // Only gets here if fingerprint doesn't exist
-        Peer peer = addFingerPrint(fingerPrint);
+        Peer peer = addFingerPrint(fingerPrint, peers);
         peer.addPhysicalAddress(physicalAddress);
-        return peer;
     }
 
-    public Peer addFingerPrint(String fingerPrint)
+    public static Peer addFingerPrint(String fingerPrint, LinkedList<Peer> peers)
     {
         Peer peer = new Peer();
+        peer.setFingerPrint(fingerPrint);
         peers.add(peer);
         return peer;
     }
 
-    public Peer addControlTraffic(String fingerPrint, ControlTraffic controlTraffic)
+    public static void addControlTraffic(String fingerPrint, ControlTraffic controlTraffic, LinkedList<Peer> peers)
     {
-        boolean fingerPrintExists = false;
         for(Peer p : peers)
         {
             if(p.getFingerPrint().equals(fingerPrint))
             {
                 p.setControlTraffic(controlTraffic);
-                return p;
             }
         }
-        return null;
     }
 
-    public Peer getPeer(String fingerPrint)
+    public static Peer getPeer(String fingerPrint, LinkedList<Peer> peers)
     {
-        boolean fingerPrintExists = false;
         for(Peer p : peers)
         {
             if(p.getFingerPrint().equals(fingerPrint))

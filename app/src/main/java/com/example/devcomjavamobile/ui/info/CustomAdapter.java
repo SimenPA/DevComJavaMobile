@@ -91,7 +91,7 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
             NavController navController = Navigation.findNavController(view);
             navController.navigate(R.id.navigation_transport);
             Log.i(TAG, "IPv6 address: " + ipv6Address);
-            activity.getIntent().putExtra("ipv6String", ipv6Address);
+            activity.getIntent().putExtra(" ", ipv6Address);
 
         });
     }

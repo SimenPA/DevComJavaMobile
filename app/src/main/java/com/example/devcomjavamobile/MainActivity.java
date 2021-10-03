@@ -57,6 +57,7 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navView, navController);
         //String fromC = stringFromJNI();
         //Log.i("MainActivity","Got the following string from C++: " + fromC );
+        listItems();
 
 
         try {
@@ -76,12 +77,18 @@ public class MainActivity extends AppCompatActivity {
         tcpServer = new TCPServer(peers);
 
         startTcpServer();
-        startUdpServer();
+        // startUdpServer();
 
 
         udpCheckServer = new UDPCheckServer();
 
         udpCheckServer.start();
+
+        try {
+            Crypto.testEncryption();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 
     }
@@ -190,10 +197,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void setPeers() throws Exception {
-        PeersHandler pHandler = new PeersHandler(peers);
+    public void setPeers() throws Exception { ;
 
-        Crypto c = new Crypto();
         File appDir = new File("/data/data/com.example.devcomjavamobile/");
         String[] directories = appDir.list((current, name) -> new File(current, name).isDirectory());
         for(String community : directories) {
@@ -202,12 +207,12 @@ public class MainActivity extends AppCompatActivity {
             for (String file : fileList) {
                 if (file.endsWith(".pem.tramp") && !file.equals("private_key.pem.tramp") && !file.equals("public_key.pem.tramp")) {
                     String fingerPrint = file.substring(0, file.length() - 10).toUpperCase();
-                    Peer p = pHandler.getPeer(fingerPrint);
+                    Peer p = PeersHandler.getPeer(fingerPrint, peers);
                     if (p == null) {
                         Log.i(TAG, "Adding peer " + fingerPrint);
                         p = new Peer();
                         p.setFingerPrint(fingerPrint);
-                        p.setPublicKey(c.readPublicKey("/data/data/com.example.devcomjavamobile/" + community + "/" + file));
+                        p.setPublicKey(Crypto.readPublicKey("/data/data/com.example.devcomjavamobile/" + community + "/" + file));
                         peers.add(p);
                     } else {
                         Log.i(TAG, "Peer " + fingerPrint + " already exists, adding community");

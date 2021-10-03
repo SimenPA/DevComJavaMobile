@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class UDPSender implements Runnable {
 
+    private static final String TAG = UDPSender.class.getSimpleName();
     String ip, msg;
     byte[] buf;
 
@@ -25,6 +26,8 @@ public class UDPSender implements Runnable {
         ip = ipIn;
         msg = msgIn;
         buf = msg.getBytes();
+
+
     }
 
     public void run() {
@@ -33,6 +36,13 @@ public class UDPSender implements Runnable {
                 InetAddress serverAddress = InetAddress.getByName(ip);
                 DatagramSocket socket = new DatagramSocket();
                 if (!socket.getBroadcast()) socket.setBroadcast(true);
+
+                Log.i(TAG, "Sending transfer type");
+                String transferType = "M"; // M = Message
+                byte[] transferTypeBytes = transferType.getBytes();
+                DatagramPacket transferTypePacket = new DatagramPacket(transferTypeBytes, transferTypeBytes.length , serverAddress, 2500);
+                socket.send(transferTypePacket);
+
                 DatagramPacket packet = new DatagramPacket(buf, buf.length,
                         serverAddress, 2500);
                 Log.i("UDPSender", "Trying to send message: " + msg);

@@ -2,8 +2,15 @@ package com.example.devcomjavamobile.network.testing;
 
 import android.app.Activity;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.Utility;
+import com.example.devcomjavamobile.network.devcom.Peer;
+import com.example.devcomjavamobile.network.devcom.PeersHandler;
+import com.example.devcomjavamobile.network.security.Crypto;
+import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
+import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,6 +19,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /*
@@ -39,13 +47,15 @@ public class UDPFileServer implements Runnable {
     private Thread worker;
 
     Activity activity;
+    LinkedList<Peer> peers;
 
-    private AtomicBoolean running = new AtomicBoolean(false);
-    private AtomicBoolean stopped = new AtomicBoolean(true);
+    private final AtomicBoolean running = new AtomicBoolean(false);
+    private final AtomicBoolean stopped = new AtomicBoolean(true);
 
     private final String TAG = UDPFileServer.class.getSimpleName();
 
     public UDPFileServer(Activity activity) {
+        this.peers = MainActivity.getPeers();
         this.activity = activity;
     }
 
@@ -77,7 +87,8 @@ public class UDPFileServer implements Runnable {
         try
         {
             ds = new DatagramSocket(port);
-            ds.setReuseAddress(true);
+            ds.setBroadcast(true);
+            //ds.setReuseAddress(true);
             Log.i(TAG, "UDP File Server has started");
         } catch(IOException e) {
             e.printStackTrace();
@@ -89,6 +100,7 @@ public class UDPFileServer implements Runnable {
                 DatagramPacket receiveTransferTypePacket = new DatagramPacket(receiveTransferType, receiveTransferType.length);
                 ds.setSoTimeout(0);
                 ds.receive(receiveTransferTypePacket);
+                Log.i(TAG, "Received something on the datagram socket");
                 byte[] data = receiveTransferTypePacket.getData();
                 String transferType = new String(data, 0, receiveTransferTypePacket.getLength());
 
@@ -172,13 +184,34 @@ public class UDPFileServer implements Runnable {
                         if (flag) {
                             Log.i(TAG, "Received last datagram, closing file and attempts to send back own key");
                             outToFile.close();
-                            if(transferType.equals("K")) returnPublicKey(ds, address, port);
+                            if(transferType.equals("K")) {
+                                returnPublicKey(ds, address, port);
+                                String fingerPrint = fileName.substring(0, 16);
+                                // Add fingerprint to peers if not already in linked list
+                                if (PeersHandler.getPeer(fingerPrint, peers) != null)
+                                {
+                                    PeersHandler.addFingerPrint(fingerPrint, peers);
+                                }
+                            }
                             break;
                         }
                     }
                 }
                 else if(transferType.equals("M")) { // M = "message"
-                    break; // to be developed
+
+                    String message;
+                    byte[] lmessage = new byte[100];
+                    DatagramPacket packet = new DatagramPacket(lmessage, lmessage.length);
+
+                    ds.receive(packet);
+                    Log.i(TAG, "UDP packet received. Reading");
+                    message = new String(lmessage, 0, packet.getLength());
+                    String finalMessage = message;
+                    Log.i(TAG, "UDP Message received: " + finalMessage);
+                    activity.runOnUiThread(() -> Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show());
+                }
+                else {
+                    Log.i(TAG, "Unknown packet type received");
                 }
 
             } catch(IOException e){
@@ -201,40 +234,15 @@ public class UDPFileServer implements Runnable {
     }
 
     private void returnPublicKey(DatagramSocket socket, InetAddress address, int port) throws IOException {
-        /*
-        int ttl = 0;
-        while(ttl < 100) {
-            ttl++;
-            byte[] fileRequestAck = new byte[1024];
-            DatagramPacket fileRequestPacket = new DatagramPacket(fileRequestAck, fileRequestAck.length);
-            ds.setSoTimeout(50);
-            ds.receive(fileRequestPacket);
 
-            byte[] data = fileRequestPacket.getData();
-            String fileRequestAckString = new String(data, 0, fileRequestPacket.getLength());
-            if (fileRequestAckString.equals("PK")) {
-                Log.i(TAG, "Received file request ack");
-                try {
-                    Log.i(TAG, "Sending public key file name to " + address.toString() + " at port " + port);
-                    String fileName;
-
-                    File f = new File(PUBLIC_KEY_PATH);
-                    fileName = Utility.createFingerPrint() + ".pem.tramp"; // FINGERPRINT.pem.tramp  --- like 99DE645C04C8C7B4.pem.tramp, NOT public_key.pem.tramp
-                    byte[] fileNameBytes = fileName.getBytes(); // File name as bytes to send it
-                    DatagramPacket fileNamePacket = new DatagramPacket(fileNameBytes, fileNameBytes.length, address, port); // File name packet
-                    socket.send(fileNamePacket); // Sending the packet with the file name
-
-                    PublicKeySender sender = new PublicKeySender(address.toString(), port, Utility.createFingerPrint());
-                    byte[] fileByteArray = PublicKeySender.readFileToByteArray(f); // Array of bytes the file is made of
-                    sender.sendFile(socket, fileByteArray, address, port); // Entering the method to send the actual file
-                    Log.i(TAG, "Done sending public key file");
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-        }
-         */
         try {
+
+            Log.i(TAG, "Sending transfer type");
+            String transferType = "K"; // K = key
+            byte[] transferTypeBytes = transferType.getBytes();
+            DatagramPacket transferTypePacket = new DatagramPacket(transferTypeBytes, transferTypeBytes.length ,address, port);
+            socket.send(transferTypePacket);
+
             Log.i(TAG, "Sending public key file name to " + address.toString() + " at port " + port);
             String fileName;
 
@@ -244,7 +252,7 @@ public class UDPFileServer implements Runnable {
             DatagramPacket fileNamePacket = new DatagramPacket(fileNameBytes, fileNameBytes.length, address, port); // File name packet
             socket.send(fileNamePacket); // Sending the packet with the file name
 
-            PublicKeySender sender = new PublicKeySender(address.toString(), port, Utility.createFingerPrint());
+            PublicKeySender sender = new PublicKeySender(address.toString(), port, Utility.createFingerPrint(), peers);
             byte[] fileByteArray = PublicKeySender.readFileToByteArray(f); // Array of bytes the file is made of
             sender.sendFile(socket, fileByteArray, address, port); // Entering the method to send the actual file
             Log.i(TAG, "Done sending public key file");
@@ -253,4 +261,5 @@ public class UDPFileServer implements Runnable {
         }
 
     }
+
 }

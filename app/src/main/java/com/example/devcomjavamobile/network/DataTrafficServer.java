@@ -5,16 +5,24 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.example.devcomjavamobile.MainActivity;
+import com.example.devcomjavamobile.Utility;
 import com.example.devcomjavamobile.network.devcom.ControlTraffic;
 import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.devcom.PeersHandler;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
+import com.example.devcomjavamobile.network.vpn.transport.udp.UDPHeader;
+import com.example.devcomjavamobile.network.vpn.transport.udp.UDPPacketFactory;
+import com.example.devcomjavamobile.network.vpn.util.PacketUtil;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
@@ -23,6 +31,7 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -102,7 +111,6 @@ public class DataTrafficServer implements Runnable {
                     do {
                         datagramSocket.receive(packet);
                         handleUDPPacket(packet);
-                        Log.d(TAG, "Handed it over to handleUDPPacket");
                     } while (this.isRunning());
                 }catch(NotYetConnectedException e){
                     Log.e(TAG,"Socket not connected");
@@ -139,8 +147,10 @@ public class DataTrafficServer implements Runnable {
 
     public void handleUDPPacket(@NonNull DatagramPacket packet) throws Exception {
 
-        InetAddress address = packet.getAddress();
-        Log.i(TAG, "Address in incoming UDP packet: " + address.toString().replace("/", ""));
+        InetAddress sourceAddress = packet.getAddress();
+        InetAddress destinationAddress = InetAddress.getByName(PacketUtil.getLocalIpAddress());
+        packet.getOffset();
+        Log.i(TAG, "Address in incoming UDP packet: " + sourceAddress.toString().replace("/", ""));
         byte[] buffer = packet.getData();
         int packetLength = packet.getLength();
         byte[] encryptedData = new byte[packetLength];
@@ -149,7 +159,7 @@ public class DataTrafficServer implements Runnable {
         Peer peer = null;
 
         for(Peer p: peers) {
-            for(String ip : p.getPhysicalAddresses()) if(ip.equals(address.toString().replace("/", ""))) peer = p;
+            for(String ip : p.getPhysicalAddresses()) if(ip.equals(sourceAddress.toString().replace("/", ""))) peer = p;
         }
 
         if(peer == null)
@@ -161,13 +171,41 @@ public class DataTrafficServer implements Runnable {
         {
             Log.d(TAG, "Received UDP message from peer " + peer.getFingerPrint());
             Log.d(TAG, "Encrypted data length: " + encryptedData.length);
+            Log.d(TAG, "Encrypted data: " + Arrays.toString(encryptedData));
             byte[] decryptedData = Crypto.aes_decrypt(encryptedData, peer.getDecryptCipher());
-            tunnelWriter.write(decryptedData);
+            Log.i(TAG, "Unencrypted data length: " + decryptedData.length);
+            Log.i(TAG, "Unencrypted data: " + Arrays.toString(decryptedData));
+
+            int totalLength = 20 + decryptedData.length;
+            IPv4Header iPv4Header = new IPv4Header((byte)0x04, (byte)0x05, (byte)0x00, (byte)0x00, totalLength, 0, false, false, (short)0x00, (byte)0x01, (byte)0x11, (byte)0x00, sourceAddress.hashCode(), destinationAddress.hashCode());
+            Log.i(TAG, "Source address in int: " + iPv4Header.getSourceIP());
+            byte[] srcBytes = BigInteger.valueOf(iPv4Header.getSourceIP()).toByteArray();
+            InetAddress sourceAddr = InetAddress.getByAddress(srcBytes);
+            Log.i(TAG, "Source address: " + sourceAddr.getHostAddress());
+            Log.i(TAG, "Destination address int: " + iPv4Header.getDestinationIP());
+            byte[] destBytes = BigInteger.valueOf(iPv4Header.getDestinationIP()).toByteArray();
+            InetAddress destAddr = InetAddress.getByAddress(destBytes);
+            UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(decryptedData);
+
+            Log.i(TAG, "Source Port: " + udpHeader.getSourcePort());
+            Log.i(TAG, "Destination Port: " + udpHeader.getDestinationPort());
+            Log.i(TAG, "Length: " + udpHeader.getLength());
+            Log.i(TAG, "Checksum: " + udpHeader.getChecksum());
+
+            byte[] packetData = new byte[decryptedData.length - 8];
+            System.arraycopy(decryptedData, 8, packetData, 0, packetData.length);
+
+            byte[] tunnelPacket = UDPPacketFactory.createResponsePacket(iPv4Header, udpHeader, packetData);
+
+            Log.i(TAG, "Writing to tunnel");
+            // tunnelPacket.flip()
+            tunnelWriter.write(tunnelPacket);
+            Log.i(TAG, "Written to tunnel");
+
         } else {
             Log.i(TAG, "No active session with sending peer. Dismissing packet");
         }
 
-        // ClientPacketWriter tunnelWriter = new ClientPacketWriter()
     }
 
     public boolean isRunning() {

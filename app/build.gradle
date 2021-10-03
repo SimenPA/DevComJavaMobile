@@ -5,6 +5,10 @@ android {
     compileSdkVersion 30
     buildToolsVersion "30.0.2"
 
+    configurations.all {
+        resolutionStrategy { force 'androidx.core:core-ktx:1.6.0' }
+    }
+
     defaultConfig {
         applicationId "com.example.devcomjavamobile"
         minSdkVersion 26
