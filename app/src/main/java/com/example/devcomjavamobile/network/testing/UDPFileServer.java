@@ -46,7 +46,7 @@ public class UDPFileServer implements Runnable {
 
     private Thread worker;
 
-    Activity activity;
+    Activity mainActivity;
     LinkedList<Peer> peers;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -54,9 +54,9 @@ public class UDPFileServer implements Runnable {
 
     private final String TAG = UDPFileServer.class.getSimpleName();
 
-    public UDPFileServer(Activity activity) {
+    public UDPFileServer(Activity mainActivity) {
         this.peers = MainActivity.getPeers();
-        this.activity = activity;
+        this.mainActivity = mainActivity;
     }
 
 
@@ -188,9 +188,9 @@ public class UDPFileServer implements Runnable {
                                 returnPublicKey(ds, address, port);
                                 String fingerPrint = fileName.substring(0, 16);
                                 // Add fingerprint to peers if not already in linked list
-                                if (PeersHandler.getPeer(fingerPrint, peers) != null)
+                                if (PeersHandler.getPeer(fingerPrint) != null)
                                 {
-                                    PeersHandler.addFingerPrint(fingerPrint, peers);
+                                    PeersHandler.addFingerPrint(fingerPrint);
                                 }
                             }
                             break;
@@ -208,7 +208,7 @@ public class UDPFileServer implements Runnable {
                     message = new String(lmessage, 0, packet.getLength());
                     String finalMessage = message;
                     Log.i(TAG, "UDP Message received: " + finalMessage);
-                    activity.runOnUiThread(() -> Toast.makeText(activity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show());
+                    mainActivity.runOnUiThread(() -> Toast.makeText(mainActivity, "Message received from client: " + finalMessage, Toast.LENGTH_SHORT).show());
                 }
                 else {
                     Log.i(TAG, "Unknown packet type received");

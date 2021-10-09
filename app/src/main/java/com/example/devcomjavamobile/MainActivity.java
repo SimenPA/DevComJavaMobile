@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         udpServer = new UDPFileServer(this);
-        tcpServer = new TCPServer(peers);
+        tcpServer = new TCPServer(this);
 
         startTcpServer();
         // startUdpServer();
@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
             for (String file : fileList) {
                 if (file.endsWith(".pem.tramp") && !file.equals("private_key.pem.tramp") && !file.equals("public_key.pem.tramp")) {
                     String fingerPrint = file.substring(0, file.length() - 10).toUpperCase();
-                    Peer p = PeersHandler.getPeer(fingerPrint, peers);
+                    Peer p = PeersHandler.getPeer(fingerPrint);
                     if (p == null) {
                         Log.i(TAG, "Adding peer " + fingerPrint);
                         p = new Peer();

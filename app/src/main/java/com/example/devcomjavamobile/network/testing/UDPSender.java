@@ -48,10 +48,6 @@ public class UDPSender implements Runnable {
                 Log.i("UDPSender", "Trying to send message: " + msg);
                 socket.send(packet);
                 socket.close();
-            } catch (final UnknownHostException e) {
-                e.printStackTrace();
-            } catch (final SocketException e) {
-                e.printStackTrace();
             } catch (final IOException e) {
                 e.printStackTrace();
             }

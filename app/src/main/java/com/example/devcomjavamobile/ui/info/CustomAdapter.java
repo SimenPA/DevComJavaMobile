@@ -19,6 +19,7 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
 
     private String[] devices;
     private String[] communities;
+    private String[] connectedStatus;
     private Activity activity;
 
     private final String TAG = CustomAdapter.class.getSimpleName();
@@ -60,10 +61,11 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
      * @param devices String[] containing the data to populate views to be used
      * by RecyclerView.
      */
-    public CustomAdapter(String[] devices, String[] communities, Activity activity) {
+    public CustomAdapter(String[] devices, String[] communities, String[] connectedStatus,  Activity activity) {
         this.devices = devices;
         this.communities = communities;
         this.activity =  activity;
+        this.connectedStatus = connectedStatus;
     }
 
     // Create new views (invoked by the layout manager)
@@ -84,14 +86,14 @@ public class CustomAdapter extends RecyclerView.Adapter<CustomAdapter.ViewHolder
         // contents of the view with that element
         viewHolder.getTextView().setText(devices[position]);
         viewHolder.getCommunityTextView().setText(communities[position]);
-        viewHolder.getConnectedStatusTextView().setText("DISCONNECTED");
+        viewHolder.getConnectedStatusTextView().setText(connectedStatus[position]);
 
         viewHolder.getCardView().setOnClickListener(view -> {
             String ipv6Address = Utility.generateIpv6Address(viewHolder.getCommunityTextView().getText().toString(), viewHolder.getTextView().getText().toString());
             NavController navController = Navigation.findNavController(view);
             navController.navigate(R.id.navigation_transport);
             Log.i(TAG, "IPv6 address: " + ipv6Address);
-            activity.getIntent().putExtra(" ", ipv6Address);
+            activity.getIntent().putExtra("ipv6String", ipv6Address);
 
         });
     }

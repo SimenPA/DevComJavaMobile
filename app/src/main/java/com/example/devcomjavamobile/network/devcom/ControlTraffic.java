@@ -1,6 +1,8 @@
 package com.example.devcomjavamobile.network.devcom;
 
+import android.app.Activity;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -48,12 +50,14 @@ public class ControlTraffic implements Runnable {
     private DataInputStream dis;
     private PrintWriter pw;
     private Thread worker;
+    private Activity activity;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public ControlTraffic(String physicalAddress, SocketChannel channel)
+    public ControlTraffic(String physicalAddress, SocketChannel channel, Activity activity)
     {
+        this.activity = activity;
         this.socketChannel =  channel;
         this.peers = MainActivity.getPeers();
         this.physicalAddress =  physicalAddress;
@@ -79,6 +83,7 @@ public class ControlTraffic implements Runnable {
             if(sock != null) sock.close();
             Log.v(TAG, "TCP Control Socket has been closed for physical address: " + physicalAddress);
             worker.interrupt();
+            PeersHandler.clearStoppedControlTraffic();
         }
         else {
             Log.v(TAG, "There is no TCP Control Socket open for physical address: " + physicalAddress);
@@ -110,6 +115,7 @@ public class ControlTraffic implements Runnable {
             }
             while (this.isRunning()) {
                 Log.d(TAG, "Socket channel opened");
+                activity.runOnUiThread(() -> Toast.makeText(activity, "Socket channel opened", Toast.LENGTH_SHORT).show());
                 ByteBuffer buffer = ByteBuffer.allocate(DataConst.MAX_RECEIVE_BUFFER_SIZE);
                 int len;
 
@@ -223,7 +229,7 @@ public class ControlTraffic implements Runnable {
         }
         Log.d(TAG, "Community: " + comStrb.toString());
         Log.d(TAG, "Fingerprint: " + fingStrb.toString());
-        Peer p = PeersHandler.getPeer(fingStrb.toString(), peers);
+        Peer p = PeersHandler.getPeer(fingStrb.toString());
         if(p != null) {
             boolean verified = false;
             try {

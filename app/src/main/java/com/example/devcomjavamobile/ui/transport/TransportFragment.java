@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -48,7 +49,7 @@ public class TransportFragment extends Fragment {
         ipText = (EditText)root.findViewById(R.id.enterIPEditText);
         msgText = (EditText)root.findViewById(R.id.enterMsgEditText);
 
-        peers = ((MainActivity)getActivity()).getPeers();
+        peers = MainActivity.getPeers();
 
         String newString;
         if (savedInstanceState == null) {
@@ -59,32 +60,42 @@ public class TransportFragment extends Fragment {
                 newString = extras.getString("ipv6String");
             }
         } else {
-            newString= (String) savedInstanceState.getSerializable("ipv6String");
+            newString = (String) savedInstanceState.getSerializable("ipv6String");
         }
 
         ipText.setText(newString);
 
         Button sendMsgBtn = (Button) root.findViewById(R.id.sendMsgBtn);
         sendMsgBtn.setOnClickListener(view -> {
-
-            Executor e = Executors.newCachedThreadPool();
-            UDPSender b = new UDPSender(ipText.getText().toString(), msgText.getText().toString());
-            e.execute(b);
+            if(ipText.getText().toString().equals(""))
+            {
+                Toast.makeText((MainActivity)getActivity(), "No IP address has been entered", Toast.LENGTH_SHORT).show();
+            } else {
+                Executor e = Executors.newCachedThreadPool();
+                UDPSender b = new UDPSender(ipText.getText().toString(), msgText.getText().toString());
+                e.execute(b);
+            }
 
         });
 
         sendPubKeyBtn = (Button) root.findViewById(R.id.sendPubKeyBtn);
         sendPubKeyBtn.setOnClickListener(view -> {
-                    String fingerPrint = "";
-                    try {
-                        fingerPrint = Utility.createFingerPrint();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    Executor e = Executors.newCachedThreadPool();
-                    PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 2500, fingerPrint, peers);
-                    e.execute(b);
-                });
+            if(ipText.getText().toString().equals(""))
+            {
+                Toast.makeText((MainActivity)getActivity(), "No IP address has been entered", Toast.LENGTH_SHORT).show();
+            } else {
+
+                String fingerPrint = "";
+                try {
+                    fingerPrint = Utility.createFingerPrint();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Executor e = Executors.newCachedThreadPool();
+                PublicKeySender b = new PublicKeySender(ipText.getText().toString(), 2500, fingerPrint, peers);
+                e.execute(b);
+            }
+        });
 
         startTCPServerBtn = (Button) root.findViewById(R.id.startTcpServerBtn);
         startTCPServerBtn.setOnClickListener(view -> {

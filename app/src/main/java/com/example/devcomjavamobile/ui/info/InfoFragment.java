@@ -78,7 +78,7 @@ public class InfoFragment extends Fragment {
         fingerprintText = (EditText)root.findViewById(R.id.fingerprintText);
         //devicesText = (EditText)root.findViewById(R.id.devicesText);
 
-        peers = ((MainActivity)getActivity()).getPeers();
+        peers = MainActivity.getPeers();
 
         try {
             ipText.setText(getLocalIp());
@@ -119,19 +119,22 @@ public class InfoFragment extends Fragment {
                     .getSerializable(KEY_LAYOUT_MANAGER);
         }
         setRecyclerViewLayoutManager(mCurrentLayoutManagerType);
+
         String[] peersStringTable = new String[peers.indexOf(peers.peekLast()) + 1];
         String[] communitiesStringTable = new String[peers.indexOf(peers.peekLast()) + 1];
+        String[] connectedStringTable = new String[peers.indexOf(peers.peekLast()) + 1];
         int i = 0;
         for(Peer p : peers)
         {
             peersStringTable[i] =  p.getFingerPrint();
             if(!p.getCommunities().isEmpty()) communitiesStringTable[i] = p.getCommunities().getFirst();
+            if(p.getControlTraffic() != null) connectedStringTable[i] = "CONNECTED"; else { connectedStringTable[i] = "DISCONNECTED"; }
             i++;
         }
 
         //String[] peersStringTable = new String[10];
         // for(int i = 0; i < peersStringTable.length; i++) { peersStringTable[i] = "Nummer " + i; }
-        mAdapter = new CustomAdapter(peersStringTable, communitiesStringTable, getActivity());
+        mAdapter = new CustomAdapter(peersStringTable, communitiesStringTable, connectedStringTable, getActivity());
 
         // Set CustomAdapter as the adapter for RecyclerView.
         mRecyclerView.setAdapter(mAdapter);

@@ -254,9 +254,9 @@ public class PublicKeySender implements Runnable {
                             Log.i(TAG, "Received last datagram, ending.");
                             outToFile.close();
                             String fingerPrint = fileName.substring(0, 16);
-                            if (PeersHandler.getPeer(fingerPrint, peers) != null)
+                            if (PeersHandler.getPeer(fingerPrint) != null)
                             {
-                                PeersHandler.addFingerPrint(fingerPrint, peers);
+                                PeersHandler.addFingerPrint(fingerPrint);
                             }
                             break;
                         }

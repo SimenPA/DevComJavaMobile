@@ -44,21 +44,21 @@ public class P2P {
     }
     public void joinCommunity(String community, String devFingerPrint, String devPhysicalAddress) throws Exception {
         Log.i(TAG, "My fingerprint: " + myFingerPrint.toUpperCase());
-        PeersHandler.addFingerPrint(devFingerPrint, peers);
-        PeersHandler.addPhysicalAddress(devFingerPrint, devPhysicalAddress, peers);
+        PeersHandler.addFingerPrint(devFingerPrint);
+        PeersHandler.addPhysicalAddress(devFingerPrint, devPhysicalAddress);
 
         Log.d(TAG, "PeersHandler has added community, supposedly");
 
         //TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
-        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null);
+        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null, activity);
         controlTraffic.start();
-        PeersHandler.addControlTraffic(devFingerPrint, controlTraffic, peers);
+        PeersHandler.addControlTraffic(devFingerPrint, controlTraffic);
 
         sendControlJoin(controlTraffic, community, devFingerPrint);
     }
 
     public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws Exception {
-        Peer peer = PeersHandler.getPeer(fingerPrint, peers);
+        Peer peer = PeersHandler.getPeer(fingerPrint);
         if(peer == null)
         {
             Log.i(TAG, "No known device with fingerprint: " + fingerPrint);

@@ -1,6 +1,9 @@
 package com.example.devcomjavamobile.network.devcom;
 
+import android.app.Activity;
 import android.util.Log;
+
+import com.example.devcomjavamobile.MainActivity;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -33,7 +36,8 @@ public class TCPServer implements Runnable {
     InputStreamReader isr;
     BufferedReader br;
 
-    LinkedList<Peer> peers;
+
+    private Activity mainActivity;
 
     private ByteBuffer packet = ByteBuffer.allocate(MAX_PACKET_LEN);
 
@@ -42,8 +46,8 @@ public class TCPServer implements Runnable {
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public TCPServer(LinkedList<Peer> peers) {
-        this.peers = peers;
+    public TCPServer(Activity mainActivity) {
+        this.mainActivity = mainActivity;
     }
 
     @Override
@@ -63,7 +67,7 @@ public class TCPServer implements Runnable {
                 channel = serverSocketChannel.accept();
                 if(channel != null)
                 {
-                    ControlTraffic ct = new ControlTraffic(channel.getRemoteAddress().toString(), channel);
+                    ControlTraffic ct = new ControlTraffic(channel.getRemoteAddress().toString(), channel, mainActivity);
                     ct.start();
                 }
             }
