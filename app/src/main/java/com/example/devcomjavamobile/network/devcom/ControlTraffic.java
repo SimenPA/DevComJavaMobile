@@ -9,12 +9,18 @@ import androidx.annotation.NonNull;
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
+import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.socket.DataConst;
+import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
+import com.example.devcomjavamobile.network.vpn.transport.udp.UDPHeader;
+import com.example.devcomjavamobile.network.vpn.transport.udp.UDPPacketFactory;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -24,6 +30,7 @@ import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SocketChannel;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -41,7 +48,6 @@ public class ControlTraffic implements Runnable {
 
     private final static int PORT_CONTROL = 3283;
 
-    private final LinkedList<Peer> peers;
     private String physicalAddress = "";
     private Socket sock;
     private SocketChannel socketChannel;
@@ -50,17 +56,18 @@ public class ControlTraffic implements Runnable {
     private DataInputStream dis;
     private PrintWriter pw;
     private Thread worker;
-    private Activity activity;
+    private final Activity activity;
+    private final ClientPacketWriter tunnelWriter;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public ControlTraffic(String physicalAddress, SocketChannel channel, Activity activity)
+    public ControlTraffic(String physicalAddress, SocketChannel channel, Activity activity, ClientPacketWriter tunnelWriter)
     {
         this.activity = activity;
-        this.socketChannel =  channel;
-        this.peers = MainActivity.getPeers();
-        this.physicalAddress =  physicalAddress;
+        this.socketChannel = channel;
+        this.physicalAddress = physicalAddress;
+        this.tunnelWriter = tunnelWriter;
     }
 
     public void start() {
@@ -115,7 +122,6 @@ public class ControlTraffic implements Runnable {
             }
             while (this.isRunning()) {
                 Log.d(TAG, "Socket channel opened");
-                activity.runOnUiThread(() -> Toast.makeText(activity, "Socket channel opened", Toast.LENGTH_SHORT).show());
                 ByteBuffer buffer = ByteBuffer.allocate(DataConst.MAX_RECEIVE_BUFFER_SIZE);
                 int len;
 
@@ -283,9 +289,14 @@ public class ControlTraffic implements Runnable {
             InetSocketAddress remoteIpAddresss =  (InetSocketAddress)channel.getRemoteAddress();
             p.addPhysicalAddress(remoteIpAddresss.getAddress().getHostAddress());
 
-            // Check if sender supports receiving UDP
-            UDPCheckSender udpCheckSender = new UDPCheckSender(p.getPhysicalAddresses().getFirst(), "SYN");
-            udpCheckSender.run();
+            activity.runOnUiThread(() -> Toast.makeText(activity, "Incoming control channel from device " + p.getFingerPrint() + " successfully established", Toast.LENGTH_SHORT).show());
+
+            // Check if sender supports receiving UDP.
+            // Haven't been able to test if this works as I only have one device where I'm able to open up UDP, i.e. one physical android device.
+            // The other test device is virtual android emulator that sits behind a NAT running by the computer that I'm not able to configure. (or at least haven't prioritized figuring out how to)
+
+            // UDPCheckSender udpCheckSender = new UDPCheckSender(p.getPhysicalAddresses().getFirst(), "SYN");
+            // udpCheckSender.run();
         } else {
             Log.i(TAG,"Unable to decrypt control message and get session key. Aborting session");
             interrupt();
@@ -293,28 +304,44 @@ public class ControlTraffic implements Runnable {
     }
 
 
+    // TODO
     public void handleControlPacket(byte[] data, SocketChannel channel, Peer p) throws Exception {
 
-        // Handling this later
-        /*
-        Crypto c = new Crypto();
+        // Encrypted data starts at position 23. The first 23 bytes are DevCom headers
+        byte[] encryptedData = new byte[1536];
+        System.arraycopy(data, 23, encryptedData,0,1536);
 
-        byte[] encryptedPayload = new byte[1536];
-        System.arraycopy(data, 23, encryptedPayload,0,1536);
+        byte[] decryptedData = Crypto.aes_decrypt(encryptedData, p.getDecryptCipher());
 
-        byte[] payLoad = RSAUtil.decrypt(encryptedPayload, c.readPrivateKey(PRIVATE_KEY_PATH));
+        Log.i(TAG, "Unencrypted data length: " + decryptedData.length);
+        Log.i(TAG, "Unencrypted data: " + Arrays.toString(decryptedData));
 
-        byte[] passwordBytes = new byte[32];
-        System.arraycopy((payLoad,0, passwordBytes, 0, 32);
+        int totalLength = 20 + decryptedData.length;
+        IPv4Header iPv4Header = new IPv4Header((byte)0x04, (byte)0x05, (byte)0x00, (byte)0x00, totalLength, 0, false, false, (short)0x00, (byte)0x01, (byte)0x11, (byte)0x00, sourceAddress.hashCode(), destinationAddress.hashCode());
 
-        char[] password = new char[32];
-        for(int i = 0; i < passwordBytes.length; i++) {
-            password[i] = (char)passwordBytes[i];
-        }
-        p.setPassword(password);
-        Log.i(TAG, "Join message from device " + p.getFingerPrint() + " verified. Session has been opened.");
+        byte[] srcBytes = BigInteger.valueOf(iPv4Header.getSourceIP()).toByteArray();
+        InetAddress sourceAddr = InetAddress.getByAddress(srcBytes);
+        Log.i(TAG, "Source address: " + sourceAddr.getHostAddress());
 
-         */
+        byte[] destBytes = BigInteger.valueOf(iPv4Header.getDestinationIP()).toByteArray();
+        InetAddress destAddr = InetAddress.getByAddress(destBytes);
+        Log.i(TAG, "Destination address: " + destAddr.getHostAddress());
+
+        UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(decryptedData);
+
+        Log.i(TAG, "Source Port: " + udpHeader.getSourcePort());
+        Log.i(TAG, "Destination Port: " + udpHeader.getDestinationPort());
+        Log.i(TAG, "Length: " + udpHeader.getLength());
+        Log.i(TAG, "Checksum: " + udpHeader.getChecksum());
+
+        byte[] packetData = new byte[decryptedData.length - 8];
+        System.arraycopy(decryptedData, 8, packetData, 0, packetData.length);
+
+        byte[] tunnelPacket = UDPPacketFactory.createResponsePacket(iPv4Header, udpHeader, packetData);
+
+        Log.i(TAG, "Writing to tunnel");
+        tunnelWriter.write(tunnelPacket);
+        Log.i(TAG, "Written to tunnel");
 
     }
 

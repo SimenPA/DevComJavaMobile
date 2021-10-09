@@ -7,12 +7,14 @@ import android.widget.Toast;
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.security.RSAUtil;
+import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 
 import java.io.File;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.interfaces.RSAPublicKey;
 import java.util.LinkedList;
+import java.util.concurrent.TimeUnit;
 
 import static com.example.devcomjavamobile.network.devcom.Peer.PASSWORD_LENGTH;
 
@@ -25,10 +27,12 @@ public class P2P {
     LinkedList<Peer> peers;
     String myFingerPrint;
     Activity activity;
+    ClientPacketWriter tunnelWriter;
 
-    public P2P(Activity activity)  {
+    public P2P(Activity activity, ClientPacketWriter tunnelWriter)  {
         this.peers = MainActivity.getPeers();
         this.activity =  activity;
+        this.tunnelWriter = tunnelWriter;
         try
         {
             myFingerPrint =  createFingerprint();
@@ -50,11 +54,19 @@ public class P2P {
         Log.d(TAG, "PeersHandler has added community, supposedly");
 
         //TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
-        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null, activity);
+        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null, activity, tunnelWriter);
         controlTraffic.start();
         PeersHandler.addControlTraffic(devFingerPrint, controlTraffic);
 
         sendControlJoin(controlTraffic, community, devFingerPrint);
+
+        // Poor hack to check whether the connection has been successfully established or not, but it works for now as a visual indicator
+        TimeUnit.MILLISECONDS.sleep(500);
+        if(!controlTraffic.isStopped()) {
+            activity.runOnUiThread(() -> Toast.makeText(activity, "Control channel to device " + devFingerPrint + " successfully established", Toast.LENGTH_SHORT).show());
+        } else {
+            activity.runOnUiThread(() -> Toast.makeText(activity, "Unable to connect to device " + devFingerPrint, Toast.LENGTH_SHORT).show());
+        }
     }
 
     public void sendControlJoin(ControlTraffic ct, String commmunity, String fingerPrint) throws Exception {
@@ -128,10 +140,10 @@ public class P2P {
         }
     }
 
-    //TODO: Add this method
+    // TODO: Add this method
     public void sendControlSync(Socket controlSocket, String commmunity, String fingerPrint)
     {
-
+        //
     }
 
     public void newControlPacket(byte[] controlPacket, char type, String community, String fingerPrint) {

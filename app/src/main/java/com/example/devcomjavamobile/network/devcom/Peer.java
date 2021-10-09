@@ -20,7 +20,7 @@ public class Peer {
     ControlTraffic controlTraffic = null; // Socket of the TCP control channel associated with this device
     Cipher encryptCipher;
     Cipher decryptCipher;
-
+    int udp;
 
     public Cipher getEncryptCipher() {
         return encryptCipher;
@@ -50,7 +50,6 @@ public class Peer {
 
     RSAPublicKey rsaPublicKey;
 
-    int udp;
 
     public Peer() {
         physicalAddresses = new LinkedList<>();
