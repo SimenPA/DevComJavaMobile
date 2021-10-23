@@ -18,6 +18,7 @@ public class Peer {
     LinkedList<String> communities;
     char[] password; // session key
     ControlTraffic controlTraffic = null; // Socket of the TCP control channel associated with this device
+    RSAPublicKey rsaPublicKey;
     Cipher encryptCipher;
     Cipher decryptCipher;
     int udp;
@@ -47,8 +48,6 @@ public class Peer {
     public void setPublicKey(RSAPublicKey rsaPublicKey) {
         this.rsaPublicKey = rsaPublicKey;
     }
-
-    RSAPublicKey rsaPublicKey;
 
 
     public Peer() {

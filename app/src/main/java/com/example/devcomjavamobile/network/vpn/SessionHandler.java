@@ -18,7 +18,6 @@ package com.example.devcomjavamobile.network.vpn;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -36,7 +35,6 @@ import com.example.devcomjavamobile.network.devcom.ControlTraffic;
 import com.example.devcomjavamobile.network.devcom.P2P;
 import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.security.Crypto;
-import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
 import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
@@ -128,26 +126,6 @@ public class SessionHandler {
         else if(IPHeader instanceof IPv6Header) {
             ipv6Header = (IPv6Header) IPHeader;
             handleIPv6Packet(stream, ipv6Header);
-            /*
-            Log.i(TAG, "Got IPv6 package with source IP: " + ipv6Header.getSourceIPString() + " and destination IP: " + ipv6Header.getDestinationIPString());
-            Log.i(TAG, "Traffic class: " + ipv6Header.getTrafficClass());
-            Log.i(TAG, "Flow label: " + ipv6Header.getFlowLabel());
-            Log.i(TAG, "Payload length: " + ipv6Header.getPayloadLen());
-            Log.i(TAG, "Next header:" + ipv6Header.getNextHdr());
-            Log.i(TAG, "Hop limit:" + ipv6Header.getHopLimit());
-            UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(stream);
-            Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
-            Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
-            byte data = 0;
-            int i = 1;
-            while(stream.hasRemaining())
-            {
-                data =  stream.get();
-                char letter = (char) data;
-                Log.i(TAG, "Data " + i + ": " + data + " which is char " + letter);
-                i++;
-            }
-            */
         }
         else {
             Log.w(TAG, "Unsupported IP header");
@@ -157,10 +135,6 @@ public class SessionHandler {
     }
 
     private void handleIPv6Packet(ByteBuffer clientPacketData, IPv6Header iPv6Header) throws Exception {
-
-        //UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(clientPacketData);
-        //Log.i(TAG, "UDPHeader - Source port:" + udpHeader.getSourcePort());
-        //Log.i(TAG, "UDPHeader - Destination port:" + udpHeader.getDestinationPort());
 
         LinkedList<Peer> peers = MainActivity.getPeers();
         Log.d(TAG, "Got IPv6 package inc");

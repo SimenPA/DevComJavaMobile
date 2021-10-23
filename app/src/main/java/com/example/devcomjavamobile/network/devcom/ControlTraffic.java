@@ -6,9 +6,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
-import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
-import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.socket.DataConst;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
@@ -24,14 +22,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
 import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -303,8 +299,6 @@ public class ControlTraffic implements Runnable {
         }
     }
 
-
-    // TODO
     public void handleControlPacket(byte[] data, SocketChannel channel, Peer p) throws Exception {
 
         // Encrypted data starts at position 23. The first 23 bytes are DevCom headers

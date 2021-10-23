@@ -6,7 +6,6 @@ import android.widget.Toast;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
-import com.example.devcomjavamobile.network.security.RSAUtil;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 
 import java.io.File;
