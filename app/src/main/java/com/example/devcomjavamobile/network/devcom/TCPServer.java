@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.util.Log;
 
 import com.example.devcomjavamobile.MainActivity;
+import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -45,9 +46,11 @@ public class TCPServer implements Runnable {
 
     private AtomicBoolean running = new AtomicBoolean(false);
     private AtomicBoolean stopped = new AtomicBoolean(true);
+    ClientPacketWriter tunnelWriter;
 
-    public TCPServer(Activity mainActivity) {
+    public TCPServer(Activity mainActivity, ClientPacketWriter tunnelWriter) {
         this.mainActivity = mainActivity;
+        this.tunnelWriter = tunnelWriter;
     }
 
     @Override
@@ -67,7 +70,7 @@ public class TCPServer implements Runnable {
                 channel = serverSocketChannel.accept();
                 if(channel != null)
                 {
-                    ControlTraffic ct = new ControlTraffic(channel.getRemoteAddress().toString(), channel, mainActivity);
+                    ControlTraffic ct = new ControlTraffic(channel.getRemoteAddress().toString(), channel, mainActivity, tunnelWriter);
                     ct.start();
                 }
             }

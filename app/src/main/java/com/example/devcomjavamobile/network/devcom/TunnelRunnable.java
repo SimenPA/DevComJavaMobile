@@ -14,6 +14,7 @@ package com.example.devcomjavamobile.network.devcom;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
+import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.DataTrafficServer;
 import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.example.devcomjavamobile.network.vpn.SessionHandler;
@@ -40,9 +41,9 @@ public class TunnelRunnable implements Runnable {
     private FileInputStream tunnelReadStream;
 
     // Packets from upstream servers, received by this VPN
-    private FileOutputStream tunnelWriteStream;
+    private static FileOutputStream tunnelWriteStream;
 
-    private ClientPacketWriter tunnelPacketWriter;
+    private static ClientPacketWriter tunnelPacketWriter;
     private Thread tunnelPacketWriterThread;
 
     private SocketNIODataService nioService;
@@ -62,11 +63,16 @@ public class TunnelRunnable implements Runnable {
         dataServiceThread = new Thread(nioService, "Socket NIO thread");
         manager = new SessionManager();
         handler = new SessionHandler(manager, nioService, tunnelPacketWriter);
+
+    }
+
+    public static ClientPacketWriter getTunnelWriter()
+    {
+        return tunnelPacketWriter;
     }
 
     // Allocate the buffer for a single packet.
     private ByteBuffer packet = ByteBuffer.allocate(MAX_PACKET_LEN);
-
 
     @Override
     public void run() {
@@ -103,18 +109,6 @@ public class TunnelRunnable implements Runnable {
                     } catch (Exception e) {
                         String errorMessage = (e.getMessage() != null) ? e.getMessage() : e.toString();
                         Log.e(TAG, errorMessage);
-
-                        /*
-                        // Port this stuff later if needed
-                        boolean isIgnorable =
-                                ((e is ConnectException && errorMessage.equals("Permission denied")) ||
-                        (e is ConnectException && errorMessage.equals("Network is unreachable")) ||
-                        (e is PacketHeaderException && errorMessage.contains("IP version should be 4 but was 6")));
-
-                        if (!isIgnorable) {
-                            // Sentry.capture(e);
-                        }
-                        */
                     }
 
                     packet.clear();

@@ -9,10 +9,12 @@ import android.widget.Toast;
 import com.example.devcomjavamobile.network.devcom.Peer;
 import com.example.devcomjavamobile.network.devcom.PeersHandler;
 import com.example.devcomjavamobile.network.devcom.TCPServer;
+import com.example.devcomjavamobile.network.devcom.TunnelRunnable;
 import com.example.devcomjavamobile.network.devcom.TunnelService;
 import com.example.devcomjavamobile.network.devcom.UDPCheckServer;
 import com.example.devcomjavamobile.network.testing.UDPFileServer;
 import com.example.devcomjavamobile.network.security.Crypto;
+import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
     UDPFileServer udpServer;
 
     UDPCheckServer udpCheckServer;
+    ClientPacketWriter tunnelWriter;
 
     static {
         System.loadLibrary("native-lib");
@@ -73,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         udpServer = new UDPFileServer(this);
-        tcpServer = new TCPServer(this);
+        tcpServer = new TCPServer(this, TunnelRunnable.getTunnelWriter());
 
         startTcpServer();
         // startUdpServer();
@@ -221,7 +224,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
     public static LinkedList<Peer> getPeers() { return peers; }
 
     public native String stringFromJNI();

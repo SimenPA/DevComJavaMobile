@@ -76,8 +76,6 @@ public class ControlTraffic implements Runnable {
 
     public String getPhysicalAddress() { return physicalAddress; }
 
-    public SocketChannel getSocketChannel() { return socketChannel; }
-
     public void interrupt() throws IOException {
         if(isRunning())
         {
@@ -301,6 +299,9 @@ public class ControlTraffic implements Runnable {
 
     public void handleControlPacket(byte[] data, SocketChannel channel, Peer p) throws Exception {
 
+        int sourceAddress = channel.getLocalAddress().hashCode();
+        int destinationAddress = channel.getRemoteAddress().hashCode();
+
         // Encrypted data starts at position 23. The first 23 bytes are DevCom headers
         byte[] encryptedData = new byte[1536];
         System.arraycopy(data, 23, encryptedData,0,1536);
@@ -311,7 +312,7 @@ public class ControlTraffic implements Runnable {
         Log.i(TAG, "Unencrypted data: " + Arrays.toString(decryptedData));
 
         int totalLength = 20 + decryptedData.length;
-        IPv4Header iPv4Header = new IPv4Header((byte)0x04, (byte)0x05, (byte)0x00, (byte)0x00, totalLength, 0, false, false, (short)0x00, (byte)0x01, (byte)0x11, (byte)0x00, sourceAddress.hashCode(), destinationAddress.hashCode());
+        IPv4Header iPv4Header = new IPv4Header((byte)0x04, (byte)0x05, (byte)0x00, (byte)0x00, totalLength, 0, false, false, (short)0x00, (byte)0x01, (byte)0x11, (byte)0x00, sourceAddress, destinationAddress);
 
         byte[] srcBytes = BigInteger.valueOf(iPv4Header.getSourceIP()).toByteArray();
         InetAddress sourceAddr = InetAddress.getByAddress(srcBytes);

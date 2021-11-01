@@ -34,6 +34,7 @@ import com.example.devcomjavamobile.network.DataTrafficSender;
 import com.example.devcomjavamobile.network.devcom.ControlTraffic;
 import com.example.devcomjavamobile.network.devcom.P2P;
 import com.example.devcomjavamobile.network.devcom.Peer;
+import com.example.devcomjavamobile.network.devcom.TunnelRunnable;
 import com.example.devcomjavamobile.network.security.Crypto;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPPacketFactory;
 import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
@@ -185,7 +186,7 @@ public class SessionHandler {
 
                         byte[] controlPacket = new byte[2017];
                         ControlTraffic ct = p.getControlTraffic();
-                        P2P p2p = new P2P(null);
+                        P2P p2p = new P2P(null, TunnelRunnable.getTunnelWriter());
 
                         p2p.newControlPacket(controlPacket, 'P', community, Utility.createFingerPrint());
 

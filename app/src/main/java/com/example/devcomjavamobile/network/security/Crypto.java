@@ -282,21 +282,6 @@ public class Crypto {
         return true;
     }
 
-    public static byte[] decryptRSA(byte[] data, PrivateKey privateKey) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-
-        byte[] decryptedPacket = new byte[data.length];
-        for(int i = 0; i < data.length / 500; i++)
-        {
-            byte[] toDecrypt =  new byte[512];
-            System.arraycopy(data,(i * 512) + 23, toDecrypt, 0, 512);
-            System.arraycopy(cipher.doFinal(toDecrypt), 0, decryptedPacket, (i*512), 512);
-        }
-
-        return data;
-    }
-
     public static int sign(byte[] controlPacket) throws Exception {
 
         byte[] data = new byte[1559];

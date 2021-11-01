@@ -93,8 +93,9 @@ public class P2P {
 
         if(hasPublicKey) {
 
-            peer.setUdp(1); // This should be set to 0 here, and set to 1 if UDP check is successful, but this is always set to 1 here as I join from VM to physical,
-            // and UDP only works from VM to physical in my testing case, so check will fail physical to VM, but other way will work
+            peer.setUdp(1); // This should be set to 0 here, and set to 1 if UDP check is successful, but for my testing scenario due to issues with VM being behind NAt, making two way handshake impossible without
+            // using a reverse connection, I've set it to 1 here unless testing TCP fallback
+
 
             // 23 byte header + 1536 byte encrypted payload + 512 byte signature = 2071 byte packet
             byte[] controlPacket = new byte[2071];

@@ -275,17 +275,6 @@ public class PacketUtil {
 
     }
 
-    /*
-    public static String byteToBits(final byte val) {
-        final StringBuilder result = new StringBuilder();
-
-        for (int i=0; i<8; i++) {
-            result.append((int)(val >> (8-(i+1)) & 0x0001));
-        }
-
-        return result.toString();
-    }
-    */
 
     /**
      * get IP address of device
