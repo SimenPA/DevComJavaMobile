@@ -14,12 +14,10 @@ package com.example.devcomjavamobile.network.devcom;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
-import com.example.devcomjavamobile.MainActivity;
-import com.example.devcomjavamobile.network.DataTrafficServer;
-import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
-import com.example.devcomjavamobile.network.vpn.SessionHandler;
-import com.example.devcomjavamobile.network.vpn.SessionManager;
-import com.example.devcomjavamobile.network.vpn.socket.SocketNIODataService;
+import com.example.devcomjavamobile.network.tunneling.ClientPacketWriter;
+import com.example.devcomjavamobile.network.tunneling.SessionHandler;
+import com.example.devcomjavamobile.network.tunneling.SessionManager;
+import com.example.devcomjavamobile.network.tunneling.socket.SocketNIODataService;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -82,7 +80,7 @@ public class TunnelRunnable implements Runnable {
         }
         Log.d(TAG, "Tunnel thread starting");
 
-        DataTrafficServer dataTrafficServer = new DataTrafficServer(tunnelPacketWriter);
+        DataTrafficServer dataTrafficServer = new DataTrafficServer();
         dataTrafficServer.start();
 
         dataServiceThread.start();

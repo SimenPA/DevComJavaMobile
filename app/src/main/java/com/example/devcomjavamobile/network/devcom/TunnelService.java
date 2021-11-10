@@ -18,11 +18,9 @@ import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
 import com.example.devcomjavamobile.Utility;
-import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
-import com.example.devcomjavamobile.network.vpn.socket.IProtectSocket;
-import com.example.devcomjavamobile.network.vpn.socket.SocketProtector;
+import com.example.devcomjavamobile.network.tunneling.socket.IProtectSocket;
+import com.example.devcomjavamobile.network.tunneling.socket.SocketProtector;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.Objects;

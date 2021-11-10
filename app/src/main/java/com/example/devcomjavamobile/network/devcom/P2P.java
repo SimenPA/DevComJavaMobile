@@ -6,7 +6,7 @@ import android.widget.Toast;
 
 import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.network.security.Crypto;
-import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
+import com.example.devcomjavamobile.network.tunneling.ClientPacketWriter;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -26,12 +26,10 @@ public class P2P {
     LinkedList<Peer> peers;
     String myFingerPrint;
     Activity activity;
-    ClientPacketWriter tunnelWriter;
 
-    public P2P(Activity activity, ClientPacketWriter tunnelWriter)  {
+    public P2P(Activity activity)  {
         this.peers = MainActivity.getPeers();
         this.activity =  activity;
-        this.tunnelWriter = tunnelWriter;
         try
         {
             myFingerPrint =  createFingerprint();
@@ -52,8 +50,8 @@ public class P2P {
 
         Log.d(TAG, "PeersHandler has added community, supposedly");
 
-        //TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
-        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null, activity, tunnelWriter);
+        // TODO: save cache file method - .cache file, text file with fingerprint and known physical addresses
+        ControlTraffic controlTraffic = new ControlTraffic(devPhysicalAddress, null, activity);
         controlTraffic.start();
         PeersHandler.addControlTraffic(devFingerPrint, controlTraffic);
 
@@ -137,6 +135,7 @@ public class P2P {
         } else {
             Log.i(TAG, "Public key is unknown, unable to proceed");
             activity.runOnUiThread(() -> Toast.makeText(activity, "No public key known for fingerprint: " + fingerPrint, Toast.LENGTH_SHORT).show());
+            ct.interrupt();
         }
     }
 

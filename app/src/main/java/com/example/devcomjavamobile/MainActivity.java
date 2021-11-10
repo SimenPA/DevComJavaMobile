@@ -12,9 +12,9 @@ import com.example.devcomjavamobile.network.devcom.TCPServer;
 import com.example.devcomjavamobile.network.devcom.TunnelRunnable;
 import com.example.devcomjavamobile.network.devcom.TunnelService;
 import com.example.devcomjavamobile.network.devcom.UDPCheckServer;
-import com.example.devcomjavamobile.network.testing.UDPFileServer;
+import com.example.devcomjavamobile.network.testing.UDPServer;
 import com.example.devcomjavamobile.network.security.Crypto;
-import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
+import com.example.devcomjavamobile.network.tunneling.ClientPacketWriter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -24,6 +24,7 @@ import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 
 
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
     static LinkedList<Peer> peers;
 
     TCPServer tcpServer;
-    UDPFileServer udpServer;
+    UDPServer udpServer;
 
     UDPCheckServer udpCheckServer;
     ClientPacketWriter tunnelWriter;
@@ -75,11 +76,11 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        udpServer = new UDPFileServer(this);
-        tcpServer = new TCPServer(this, TunnelRunnable.getTunnelWriter());
+        udpServer = new UDPServer(this);
+        tcpServer = new TCPServer(this);
 
         startTcpServer();
-        // startUdpServer();
+        startUdpServer();
 
 
         udpCheckServer = new UDPCheckServer();
@@ -173,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void startTunnel() {
+    public void startTunnel()  {
 
         Intent vpnIntent = VpnService.prepare(this);
         boolean vpnNotConfigured = vpnIntent != null;
@@ -216,10 +217,11 @@ public class MainActivity extends AppCompatActivity {
                         p.setFingerPrint(fingerPrint);
                         p.setPublicKey(Crypto.readPublicKey("/data/data/com.example.devcomjavamobile/" + community + "/" + file));
                         peers.add(p);
+                        p.addCommunity(community);
                     } else {
                         Log.i(TAG, "Peer " + fingerPrint + " already exists, adding community");
                     }
-                    p.addCommunity(community);
+
                 }
             }
         }

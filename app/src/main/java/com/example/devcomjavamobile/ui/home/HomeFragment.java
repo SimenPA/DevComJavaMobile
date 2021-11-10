@@ -17,8 +17,7 @@ import com.example.devcomjavamobile.MainActivity;
 import com.example.devcomjavamobile.R;
 import com.example.devcomjavamobile.network.devcom.P2P;
 import com.example.devcomjavamobile.network.devcom.TunnelRunnable;
-import com.example.devcomjavamobile.network.testing.UDPFileServer;
-import com.example.devcomjavamobile.network.testing.UDPServer;
+//import com.example.devcomjavamobile.network.testing.UDPServer;
 
 public class HomeFragment extends Fragment {
 
@@ -42,7 +41,7 @@ public class HomeFragment extends Fragment {
 
         Button joinComBtn = (Button) root.findViewById(R.id.joinComBtn);
         joinComBtn.setOnClickListener(view -> {
-            P2P p2p = new P2P(getActivity(), TunnelRunnable.getTunnelWriter());
+            P2P p2p = new P2P(getActivity());
             try {
                 p2p.joinCommunity(communityText.getText().toString(), fingerPrintText.getText().toString(), addressText.getText().toString());
             } catch (Exception e) {

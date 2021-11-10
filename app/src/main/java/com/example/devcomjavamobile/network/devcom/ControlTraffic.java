@@ -7,11 +7,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.example.devcomjavamobile.network.security.Crypto;
-import com.example.devcomjavamobile.network.vpn.ClientPacketWriter;
-import com.example.devcomjavamobile.network.vpn.socket.DataConst;
-import com.example.devcomjavamobile.network.vpn.transport.ip.IPv4Header;
-import com.example.devcomjavamobile.network.vpn.transport.udp.UDPHeader;
-import com.example.devcomjavamobile.network.vpn.transport.udp.UDPPacketFactory;
+import com.example.devcomjavamobile.network.tunneling.ClientPacketWriter;
+import com.example.devcomjavamobile.network.tunneling.socket.DataConst;
+import com.example.devcomjavamobile.network.tunneling.transport.ip.IPv4Header;
+import com.example.devcomjavamobile.network.tunneling.transport.udp.UDPHeader;
+import com.example.devcomjavamobile.network.tunneling.transport.udp.UDPPacketFactory;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.ClosedChannelException;
@@ -53,17 +54,15 @@ public class ControlTraffic implements Runnable {
     private PrintWriter pw;
     private Thread worker;
     private final Activity activity;
-    private final ClientPacketWriter tunnelWriter;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final AtomicBoolean stopped = new AtomicBoolean(true);
 
-    public ControlTraffic(String physicalAddress, SocketChannel channel, Activity activity, ClientPacketWriter tunnelWriter)
+    public ControlTraffic(String physicalAddress, SocketChannel channel, Activity activity)
     {
         this.activity = activity;
         this.socketChannel = channel;
         this.physicalAddress = physicalAddress;
-        this.tunnelWriter = tunnelWriter;
     }
 
     public void start() {
@@ -116,7 +115,7 @@ public class ControlTraffic implements Runnable {
             }
             while (this.isRunning()) {
                 Log.d(TAG, "Socket channel opened");
-                ByteBuffer buffer = ByteBuffer.allocate(DataConst.MAX_RECEIVE_BUFFER_SIZE);
+                ByteBuffer buffer = ByteBuffer.allocate(2071);
                 int len;
 
                 try {
@@ -297,14 +296,25 @@ public class ControlTraffic implements Runnable {
         }
     }
 
+    // TODO: Handle TCP packets in control packets
     public void handleControlPacket(byte[] data, SocketChannel channel, Peer p) throws Exception {
 
-        int sourceAddress = channel.getLocalAddress().hashCode();
-        int destinationAddress = channel.getRemoteAddress().hashCode();
+        InetSocketAddress destSockAddr = (InetSocketAddress)channel.getLocalAddress();
+        InetAddress destInetAddress = destSockAddr.getAddress();
 
-        // Encrypted data starts at position 23. The first 23 bytes are DevCom headers
-        byte[] encryptedData = new byte[1536];
-        System.arraycopy(data, 23, encryptedData,0,1536);
+        InetSocketAddress srcSockAddr = (InetSocketAddress)channel.getRemoteAddress();
+        InetAddress srcInetAddress = srcSockAddr.getAddress();
+
+
+        // Extract encrypted data length
+        byte [] encDataLength = new byte[4];
+        System.arraycopy(data, 23, encDataLength,0,4);
+        ByteBuffer bb = ByteBuffer.wrap(encDataLength);
+        int encDataLengthInt = bb.getInt();
+
+        // Encrypted data starts at position 27. The first 23 bytes are DevCom headers and the next 4 is encrypted data length in int
+        byte[] encryptedData = new byte[encDataLengthInt];
+        System.arraycopy(data, 27, encryptedData,0,encryptedData.length);
 
         byte[] decryptedData = Crypto.aes_decrypt(encryptedData, p.getDecryptCipher());
 
@@ -312,19 +322,18 @@ public class ControlTraffic implements Runnable {
         Log.i(TAG, "Unencrypted data: " + Arrays.toString(decryptedData));
 
         int totalLength = 20 + decryptedData.length;
-        IPv4Header iPv4Header = new IPv4Header((byte)0x04, (byte)0x05, (byte)0x00, (byte)0x00, totalLength, 0, false, false, (short)0x00, (byte)0x01, (byte)0x11, (byte)0x00, sourceAddress, destinationAddress);
-
+        IPv4Header iPv4Header = new IPv4Header((byte)0x04, (byte)0x05, (byte)0x00, (byte)0x00, totalLength, 0, false, false, (short)0x00, (byte)0x01, (byte)0x11, (byte)0x00, srcInetAddress.hashCode(), destInetAddress.hashCode());
+        Log.i(TAG, "Source address in int: " + iPv4Header.getSourceIP());
         byte[] srcBytes = BigInteger.valueOf(iPv4Header.getSourceIP()).toByteArray();
         InetAddress sourceAddr = InetAddress.getByAddress(srcBytes);
         Log.i(TAG, "Source address: " + sourceAddr.getHostAddress());
-
+        Log.i(TAG, "Destination address int: " + iPv4Header.getDestinationIP());
         byte[] destBytes = BigInteger.valueOf(iPv4Header.getDestinationIP()).toByteArray();
         InetAddress destAddr = InetAddress.getByAddress(destBytes);
-        Log.i(TAG, "Destination address: " + destAddr.getHostAddress());
-
         UDPHeader udpHeader = UDPPacketFactory.createUDPHeader(decryptedData);
 
         Log.i(TAG, "Source Port: " + udpHeader.getSourcePort());
+
         Log.i(TAG, "Destination Port: " + udpHeader.getDestinationPort());
         Log.i(TAG, "Length: " + udpHeader.getLength());
         Log.i(TAG, "Checksum: " + udpHeader.getChecksum());
@@ -335,6 +344,7 @@ public class ControlTraffic implements Runnable {
         byte[] tunnelPacket = UDPPacketFactory.createResponsePacket(iPv4Header, udpHeader, packetData);
 
         Log.i(TAG, "Writing to tunnel");
+        ClientPacketWriter tunnelWriter = TunnelRunnable.getTunnelWriter();
         tunnelWriter.write(tunnelPacket);
         Log.i(TAG, "Written to tunnel");
 
